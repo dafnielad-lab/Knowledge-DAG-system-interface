@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}{{ claim.id }} · Knowledge DAG{% endblock %}
+
+{% macro render_tree(node) %}
+  <ul class="tree">
+    <li>
+      <a href="/claims/{{ node.id }}" title="{{ node.id }}">{{ name_map.get(node.id, node.id) }}</a>
+      {% if node.get('cycle') %}<span class="cycle">⚠ cycle</span>{% endif %}
+      {% if node.get('truncated') %}<span class="truncated">…</span>{% endif %}
+      {% if node.children %}
+        {% for child in node.children %}
+          {{ render_tree(child) }}
+        {% endfor %}
+      {% endif %}
+    </li>
+  </ul>
+{% endmacro %}
+
+{% block content %}
+<div class="detail">
+  <header class="claim-header">
+    {% set name = claim.statement | claim_name %}
+    <div class="tagline">
+      {% if name %}<span class="claim-name">{{ name }}</span>{% endif %}
+      <span class="kind-badge kind-{{ claim.kind }}">{{ claim.kind }}</span>
+      <span class="pill pill-id">{{ claim.id }}</span>
+      <span class="status-pill {{ effective.color }}">{{ claim.status }}</span>
+      {% if claim.course %}<span class="pill pill-meta"><span class="label">קורס</span><span class="val">{{ claim.course }}</span></span>{% endif %}
+      {% if claim.topic %}<span class="pill pill-meta"><span class="label">נושא</span><span class="val">{{ claim.topic }}</span></span>{% endif %}
+      {% if effective.modulo %}
+        <span class="status-pill amber">modulo: {% for m in effective.modulo %}<code>{{ m }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</span>
+      {% endif %}
+    </div>
+
+    <div class="claim-statement">{{ claim.statement | claim_body | render_md }}</div>
+
+    <div class="actions-row">
+      <a href="/claims/{{ claim.id }}/edit" class="btn secondary">ערוך</a>
+      <a href="/proofs/new?claim_id={{ claim.id }}" class="btn secondary">+ הוכחה</a>
+      {% if claim.status != 'canonical' %}
+        <form method="post" action="/ui/claims/{{ claim.id }}/approve" style="display:inline;">
+          <button type="submit" class="btn">אשר → canonical</button>
+        </form>
+      {% endif %}
+      <form method="post" action="/ui/claims/{{ claim.id }}/delete" style="display:inline; margin-right: auto;"
+            onsubmit="return confirm('למחוק את הטענה {{ claim.id }}?')">
+        <button type="submit" class="btn danger">מחק</button>
+      </form>
+    </div>
+  </header>
+
+  {% if claim.relates_to %}
+  <section class="section">
+    <h4>יחס</h4>
+    <p><code>{{ claim.relation_kind }}</code> בין:</p>
+    <ul>
+      {% for r in claim.relates_to %}
+        <li><strong>{{ r.role }}</strong>: <a href="/claims/{{ r.claim_id }}"><code>{{ r.claim_id }}</code></a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if claim.notes %}
+  <section class="section">
+    <h4>הערות</h4>
+    <div class="body-block">{{ claim.notes | render_md }}</div>
+  </section>
+  {% endif %}
+
+  <section class="section">
+    <h4>הוכחות {% if proof_ids %}<span style="color: var(--ink-faint);">· {{ proof_ids|length }}</span>{% endif %}</h4>
+    {% if not proof_ids %}
+      <div class="empty" style="padding: 32px;">
+        <p>אין עדיין הוכחה לטענה זו.</p>
+        <a href="/proofs/new?claim_id={{ claim.id }}" class="btn">+ צור הוכחה</a>
+      </div>
+    {% else %}
+      {% for p in proofs %}
+        <article class="proof-card">
+          <header class="proof-header">
+            <span class="id">{{ p.id }}</span>
+            {% if p.is_canonical %}<span class="canon-mark">★ canonical</span>{% endif %}
+            <span class="kind-badge kind-{{ p.method }}">{{ p.method }}</span>
+            <span class="status-pill {% if p.status == 'verified' %}green{% elif p.status == 'reviewed' %}green{% else %}amber{% endif %}">{{ p.status }}</span>
+            <a href="/proofs/{{ p.id }}/edit" style="margin-right: auto; color: var(--ink-faint); text-decoration: none; font-size: 13px;">ערוך</a>
+          </header>
+          <div class="proof-body">{{ p.body | render_md }}</div>
+          {% if p.dependencies %}
+          <div class="deps">
+            <span class="deps-label">תלויות:</span>
+            {% for d in p.dependencies %}
+              <a href="/claims/{{ d }}" title="{{ d }}" class="dep-link">{{ name_map.get(d, d) }}</a>{% if not loop.last %}<span class="dep-sep"> · </span>{% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </article>
+      {% endfor %}
+    {% endif %}
+  </section>
+
+  <section class="section">
+    <h4>גרף ההקשרים <span style="color: var(--ink-faint); font-weight: 400; font-size: 13px;">· שכנים בעומק 2 · גלגלת לזום · גרור להזיז · לחיצה על צומת = ניווט</span></h4>
+    <div id="dag-graph" class="dag-graph"></div>
+    <div class="dag-legend">
+      <span><span class="dot k-axiom"></span> אקסיומה</span>
+      <span><span class="dot k-definition"></span> הגדרה</span>
+      <span><span class="dot k-theorem"></span> משפט</span>
+      <span><span class="dot k-lemma"></span> למה</span>
+      <span><span class="dot k-focus"></span> הטענה הנוכחית</span>
+    </div>
+  </section>
+
+  <section class="section">
+    <h4>אבות — מה הטענה נשענת עליו <span style="color: var(--ink-faint); font-weight: 400; font-size: 13px;">· שורש עד האקסיומות</span></h4>
+    {% if not traceability or not traceability.children %}
+      <p style="color: var(--ink-faint);">אין הוכחה canonical עם תלויות — אין מה לפרוס.</p>
+    {% else %}
+      {{ render_tree(traceability) }}
+    {% endif %}
+  </section>
+
+  <section class="section">
+    <h4>בנים — מה נשען על הטענה <span style="color: var(--ink-faint); font-weight: 400; font-size: 13px;">· כל מי שמשתמש בה, ישירות או דרך שרשרת</span></h4>
+    {% if not traceability_descendants or not traceability_descendants.children %}
+      <p style="color: var(--ink-faint);">אף טענה אחרת לא מסתמכת על זו (עדיין).</p>
+    {% else %}
+      {{ render_tree(traceability_descendants) }}
+    {% endif %}
+  </section>
+
+  {% if cited_by %}
+  <section class="section">
+    <h4>מצוטט ע"י</h4>
+    <ul style="list-style: none; padding: 0; margin: 0; display: grid; gap: 8px;">
+      {% for cb in cited_by %}
+        <li style="padding: 8px 14px; background: var(--bg-elevated); border: 1px solid var(--rule); border-radius: 3px;">
+          הוכחה <code title="{{ cb.proof_id }}">{{ cb.proof_id }}</code> של
+          <a href="/claims/{{ cb.claim_id }}" title="{{ cb.claim_id }}">{{ name_map.get(cb.claim_id, cb.claim_id) }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if claim.source %}
+  <section class="section">
+    <h4>מקור</h4>
+    <div class="body-block">
+      <p style="margin:0;">
+        טיפוס: <code>{{ claim.source.type }}</code> ·
+        מקור: <code>{{ claim.source.ref }}</code> ·
+        ע"י: <code>{{ claim.source.imported_by }}</code>
+        {% if claim.source.confidence %} · ביטחון: {{ claim.source.confidence }}{% endif %}
+      </p>
+      {% if claim.source.raw_excerpt %}
+        <details style="margin-top: 10px;">
+          <summary style="cursor: pointer; color: var(--accent);">קטע מהמקור</summary>
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--rule);">{{ claim.source.raw_excerpt }}</div>
+        </details>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+<script>
+(function() {
+  const FOCUS_ID = {{ claim.id | tojson }};
+  const container = document.getElementById('dag-graph');
+  if (!container || typeof cytoscape === 'undefined') return;
+
+  fetch(`/api/claims/${encodeURIComponent(FOCUS_ID)}/neighborhood?depth_down=2&depth_up=2`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.nodes || data.nodes.length === 0) return;
+
+      // API returns edges as (dependent -> dependency). For the visual we want
+      // axioms on top and the derived flow downward, so we swap source/target —
+      // the arrow now reads "X feeds into Y" instead of "X depends on Y".
+      const elements = [
+        ...data.nodes.map(n => ({
+          data: { id: n.id, label: n.name, kind: n.kind, status: n.status, is_focus: n.is_focus },
+          classes: `k-${n.kind} ${n.is_focus ? 'is-focus' : ''}`,
+        })),
+        ...data.edges.map(e => ({ data: { source: e.target, target: e.source } })),
+      ];
+
+      const cy = cytoscape({
+        container: container,
+        elements: elements,
+        wheelSensitivity: 0.2,
+        layout: {
+          name: 'dagre', rankDir: 'TB',
+          nodeSep: 30, rankSep: 60, edgeSep: 10,
+        },
+        style: [
+          { selector: 'node', style: {
+              'label': 'data(label)',
+              'text-valign': 'center', 'text-halign': 'center',
+              'text-wrap': 'wrap', 'text-max-width': '160px',
+              'font-family': 'Heebo, sans-serif', 'font-size': '12px',
+              'shape': 'round-rectangle',
+              'background-color': '#ffffff',
+              'border-width': 1.5, 'border-color': '#b8b3a6',
+              'color': '#1c1c1c',
+              'padding': '10px',
+              'width': 'label', 'height': 'label',
+              'border-style': 'solid',
+          }},
+          { selector: 'node.k-axiom',      style: { 'border-color': '#4a6b3a', 'background-color': '#f4f9f0' }},
+          { selector: 'node.k-definition', style: { 'border-color': '#3a5b75', 'background-color': '#eff5f9' }},
+          { selector: 'node.k-theorem',    style: { 'border-color': '#6b2c2c', 'background-color': '#fbf5f0' }},
+          { selector: 'node.k-lemma',      style: { 'border-color': '#9a6b2c', 'background-color': '#faf3e8' }},
+          { selector: 'node.k-relation',   style: { 'border-color': '#6b3a6b', 'background-color': '#f7f0f7' }},
+          { selector: 'node.is-focus', style: {
+              'border-width': 3, 'background-color': '#f0ead6',
+              'font-weight': 700,
+          }},
+          { selector: 'edge', style: {
+              'width': 1.5,
+              'line-color': '#c7c1b3',
+              'target-arrow-color': '#c7c1b3',
+              'target-arrow-shape': 'triangle',
+              'curve-style': 'bezier',
+          }},
+          { selector: 'node:hover', style: { 'border-width': 3 }},
+        ],
+      });
+
+      cy.on('tap', 'node', function(evt) {
+        const id = evt.target.id();
+        if (id) window.location.href = '/claims/' + encodeURIComponent(id);
+      });
+
+      let tooltip = null;
+      cy.on('mouseover', 'node', function(evt) {
+        if (tooltip) tooltip.remove();
+        const node = evt.target;
+        tooltip = document.createElement('div');
+        tooltip.className = 'dag-tooltip';
+        tooltip.textContent = node.id();
+        document.body.appendChild(tooltip);
+      });
+      cy.on('mousemove', 'node', function(evt) {
+        if (tooltip && evt.originalEvent) {
+          tooltip.style.left = (evt.originalEvent.pageX + 12) + 'px';
+          tooltip.style.top  = (evt.originalEvent.pageY + 12) + 'px';
+        }
+      });
+      cy.on('mouseout', 'node', function() {
+        if (tooltip) { tooltip.remove(); tooltip = null; }
+      });
+    })
+    .catch(err => {
+      container.innerHTML = '<p style="padding: 20px; color: var(--ink-faint);">לא הצלחנו לטעון את הגרף: ' + err + '</p>';
+    });
+})();
+</script>
+{% endblock %}

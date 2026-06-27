@@ -1,0 +1,5 @@
+id: math_uni_prob_stats
+name: הסתברות וסטטיסטיקה
+prerequisites:
+- math_hs_5
+schema_version: 1

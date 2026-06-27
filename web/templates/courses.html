@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}קורסים · Knowledge DAG{% endblock %}
+
+{% block content %}
+<h1>קורסים</h1>
+
+<p style="margin-bottom: 28px;"><a href="/courses/new" class="btn">+ קורס חדש</a></p>
+
+{% if not courses %}
+  <div class="empty">
+    <div class="emoji">∅</div>
+    <h3>אין עדיין קורסים</h3>
+    <p>הגדר קורסים כדי לנהל הקשרים — מה זמין לציטוט מתי. <a href="/courses/new">צור קורס</a>.</p>
+  </div>
+{% else %}
+<div class="cards">
+  {% for c in courses %}
+    <div class="card">
+      <div>
+        <span class="kind-badge kind-definition">course</span>
+        <span class="id">{{ c.id }}</span>
+      </div>
+      <div class="statement">
+        <a href="/courses/{{ c.id }}" class="title">{{ c.name }}</a>
+      </div>
+      {% if c.prerequisites %}
+        <div class="meta">
+          <span>prerequisites: {% for p in c.prerequisites %}<code>{{ p }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</span>
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

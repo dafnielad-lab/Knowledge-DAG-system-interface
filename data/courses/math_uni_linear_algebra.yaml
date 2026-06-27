@@ -1,0 +1,5 @@
+id: math_uni_linear_algebra
+name: אלגברה לינארית 1
+prerequisites:
+- math_hs_5
+schema_version: 1

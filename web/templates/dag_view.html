@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% from '_macros.html' import multi_filter, multi_filter_grouped %}
+{% block title %}גרף ההקשרים המלא · Knowledge DAG{% endblock %}
+
+{% block content %}
+<h1>גרף ההקשרים המלא <span style="color: var(--ink-faint); font-weight: 400; font-size: 16px;">· אקסיומות למעלה · נגזרים למטה</span></h1>
+
+<form id="dag-filter-form" class="filters" onsubmit="return false;">
+  {{ multi_filter('course', 'קורס', courses, [], value_of='id', label_of='name') }}
+  {{ multi_filter('kind', 'סוג', ['axiom', 'theorem', 'lemma', 'definition', 'relation'], []) }}
+  {{ multi_filter_grouped('topic', 'נושא', topics, topic_groups, []) }}
+  <div class="actions-inline">
+    <button type="button" class="btn" id="apply-btn">החל</button>
+    <button type="button" class="btn secondary" id="reset-btn">איפוס</button>
+    <button type="button" class="btn secondary" id="fit-btn">התאם לחלון</button>
+  </div>
+</form>
+
+<div id="dag-status" class="paging-summary">טוען…</div>
+<div id="dag-full-graph" class="dag-graph dag-graph-full"></div>
+<div class="dag-legend">
+  <span><span class="dot k-axiom"></span> אקסיומה</span>
+  <span><span class="dot k-definition"></span> הגדרה</span>
+  <span><span class="dot k-theorem"></span> משפט</span>
+  <span><span class="dot k-lemma"></span> למה</span>
+  <span>· גלגלת לזום · גרור להזיז · לחיצה על צומת = פתיחת דף הטענה · ריחוף מציג שם</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+
+<script>
+(function() {
+  const container = document.getElementById('dag-full-graph');
+  const statusEl  = document.getElementById('dag-status');
+  let cy = null;
+  let tooltip = null;
+
+  function buildQueryString() {
+    const params = new URLSearchParams();
+    ['course', 'kind', 'topic'].forEach(name => {
+      document.querySelectorAll(`#dag-filter-form input[name="${name}"]:checked`)
+        .forEach(c => params.append(name, c.value));
+    });
+    return params.toString();
+  }
+
+  function renderDag(data) {
+    const elements = [
+      ...data.nodes.map(n => ({
+        data: { id: n.id, label: n.name, kind: n.kind, status: n.status, course: n.course },
+        classes: `k-${n.kind}`,
+      })),
+      // Swap source/target so axioms appear at top, derived theorems flow down.
+      ...data.edges.map(e => ({ data: { source: e.target, target: e.source } })),
+    ];
+
+    if (cy) cy.destroy();
+
+    cy = cytoscape({
+      container: container,
+      elements: elements,
+      wheelSensitivity: 0.2,
+      layout: {
+        name: 'dagre',
+        rankDir: 'TB',
+        nodeSep: data.nodes.length > 200 ? 15 : 30,
+        rankSep: data.nodes.length > 200 ? 40 : 70,
+        edgeSep: 8,
+      },
+      style: [
+        { selector: 'node', style: {
+            'label': 'data(label)',
+            'text-valign': 'center', 'text-halign': 'center',
+            'text-wrap': 'wrap', 'text-max-width': '140px',
+            'font-family': 'Heebo, sans-serif',
+            'font-size': data.nodes.length > 200 ? '9px' : '11px',
+            'shape': 'round-rectangle',
+            'background-color': '#ffffff',
+            'border-width': 1.5,
+            'border-color': '#b8b3a6',
+            'color': '#1c1c1c',
+            'padding': '8px',
+            'width':  'label',
+            'height': 'label',
+        }},
+        { selector: 'node.k-axiom',      style: { 'border-color': '#4a6b3a', 'background-color': '#f4f9f0' }},
+        { selector: 'node.k-definition', style: { 'border-color': '#3a5b75', 'background-color': '#eff5f9' }},
+        { selector: 'node.k-theorem',    style: { 'border-color': '#6b2c2c', 'background-color': '#fbf5f0' }},
+        { selector: 'node.k-lemma',      style: { 'border-color': '#9a6b2c', 'background-color': '#faf3e8' }},
+        { selector: 'node.k-relation',   style: { 'border-color': '#6b3a6b', 'background-color': '#f7f0f7' }},
+        { selector: 'edge', style: {
+            'width': 1, 'line-color': '#d3cec0',
+            'target-arrow-color': '#d3cec0',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier', 'arrow-scale': 0.7,
+        }},
+        { selector: 'node:hover', style: { 'border-width': 3 }},
+      ],
+    });
+
+    cy.on('tap', 'node', function(evt) {
+      const id = evt.target.id();
+      if (id) window.location.href = '/claims/' + encodeURIComponent(id);
+    });
+    cy.on('mouseover', 'node', function(evt) {
+      if (tooltip) tooltip.remove();
+      tooltip = document.createElement('div');
+      tooltip.className = 'dag-tooltip';
+      const d = evt.target.data();
+      tooltip.innerHTML = `<strong>${d.label}</strong><br><span style="opacity:0.7">${d.id}</span>`;
+      document.body.appendChild(tooltip);
+    });
+    cy.on('mousemove', 'node', function(evt) {
+      if (tooltip && evt.originalEvent) {
+        tooltip.style.left = (evt.originalEvent.pageX + 12) + 'px';
+        tooltip.style.top  = (evt.originalEvent.pageY + 12) + 'px';
+      }
+    });
+    cy.on('mouseout', 'node', function() {
+      if (tooltip) { tooltip.remove(); tooltip = null; }
+    });
+  }
+
+  async function loadAndRender() {
+    statusEl.textContent = 'טוען נתונים…';
+    try {
+      const qs = buildQueryString();
+      const r = await fetch('/api/claims/dag/full' + (qs ? '?' + qs : ''));
+      const data = await r.json();
+      if (!data.nodes || data.nodes.length === 0) {
+        const qs = buildQueryString();
+        if (qs) {
+          statusEl.innerHTML = 'אין טענות שתואמות את <b>שילוב</b> המסננים. (תזכורת: סינון לפי כמה פילטרים = AND. נסה לנקות חלק.)';
+        } else {
+          statusEl.textContent = 'אין טענות במאגר.';
+        }
+        if (cy) cy.destroy();
+        cy = null;
+        return;
+      }
+      statusEl.textContent = `מציג ${data.nodes.length} טענות · ${data.edges.length} קשרים`;
+      renderDag(data);
+    } catch (e) {
+      statusEl.textContent = 'שגיאה: ' + e;
+    }
+  }
+
+  document.getElementById('apply-btn').addEventListener('click', loadAndRender);
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    document.querySelectorAll('#dag-filter-form input[type="checkbox"]').forEach(c => {
+      c.checked = false;
+    });
+    // Sync Alpine counters by dispatching a change event
+    document.querySelectorAll('#dag-filter-form input[type="checkbox"]').forEach(c => {
+      c.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    loadAndRender();
+  });
+  document.getElementById('fit-btn').addEventListener('click', () => {
+    if (cy) cy.fit(undefined, 30);
+  });
+
+  // Initial load — render everything; user picks filters from there.
+  // Auto-label-mode handles the readability for large initial graphs.
+  loadAndRender();
+})();
+</script>
+{% endblock %}

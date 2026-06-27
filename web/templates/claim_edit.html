@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'new' %}טענה חדשה{% else %}עריכת {{ claim.id }}{% endif %} · Knowledge DAG{% endblock %}
+
+{% block content %}
+<h1>{% if mode == 'new' %}טענה חדשה{% else %}עריכת <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--accent); direction: ltr;">{{ claim.id }}</span>{% endif %}</h1>
+
+<form class="form" method="post" action="{% if mode == 'new' %}/ui/claims/new{% else %}/ui/claims/{{ claim.id }}/update{% endif %}"
+      x-data="{ preview: `{{ (claim.statement if claim else '') | replace('`', '\\`') | replace('\\', '\\\\') }}` }">
+
+  <div class="field">
+    <label>ID</label>
+    <div class="hint">סמנטי, אנגלית / קו תחתון, ללא רווחים. דוגמה: <code>thm_pythagoras</code></div>
+    <input type="text" name="id" value="{{ claim.id if claim else '' }}"
+           {% if mode == 'edit' %}readonly{% endif %} required pattern="[A-Za-z0-9_\-\.]+">
+  </div>
+
+  <div class="field">
+    <label>סוג</label>
+    <select name="kind" required>
+      {% for k in ['axiom', 'theorem', 'lemma', 'definition', 'relation'] %}
+        <option value="{{ k }}" {% if claim and claim.kind == k %}selected{% endif %}>{{ k }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field">
+    <label>סטטוס</label>
+    <select name="status">
+      {% for s in ['draft', 'self_proved', 'ai_verified', 'reviewed', 'canonical', 'formally_verified', 'conjectured'] %}
+        <option value="{{ s }}" {% if claim and claim.status == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field">
+    <label>קורס (id)</label>
+    <div class="hint">אופציונלי. דוגמה: <code>math_hs_5</code></div>
+    <input type="text" name="course" value="{{ claim.course if claim and claim.course else '' }}">
+  </div>
+
+  <div class="field">
+    <label>נושא</label>
+    <div class="hint">אופציונלי, חופשי</div>
+    <input type="text" name="topic" value="{{ claim.topic if claim and claim.topic else '' }}" style="direction: rtl;">
+  </div>
+
+  <div class="field">
+    <label>ניסוח</label>
+    <div class="hint">LaTeX inline: <code>$...$</code> · בלוק: <code>$$...$$</code></div>
+    <textarea name="statement" required dir="auto"
+              @input.debounce.300ms="preview = $event.target.value; renderMathInElement($refs.prev, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false})">{{ claim.statement if claim else '' }}</textarea>
+    <div class="preview" x-ref="prev" x-text="preview" dir="auto"></div>
+  </div>
+
+  <div class="field">
+    <label>הערות</label>
+    <textarea name="notes" dir="auto">{{ claim.notes if claim and claim.notes else '' }}</textarea>
+  </div>
+
+  <div class="actions">
+    <button type="submit" class="btn">{% if mode == 'new' %}צור{% else %}שמור{% endif %}</button>
+    <a href="{% if mode == 'edit' %}/claims/{{ claim.id }}{% else %}/{% endif %}" class="btn secondary">ביטול</a>
+  </div>
+</form>
+{% endblock %}

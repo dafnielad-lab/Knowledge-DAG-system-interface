@@ -1,0 +1,5 @@
+id: math_jhs
+name: מתמטיקה חטיבת ביניים
+prerequisites:
+- math_elementary
+schema_version: 1

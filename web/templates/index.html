@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% from '_macros.html' import multi_filter, multi_filter_grouped %}
+{% block title %}טענות · Knowledge DAG{% endblock %}
+
+{% macro pagelink(label, target_page, current=False, disabled=False) %}
+  {%- if disabled -%}
+    <span class="page-link disabled">{{ label }}</span>
+  {%- elif current -%}
+    <span class="page-link current">{{ label }}</span>
+  {%- else -%}
+    {%- set parts = [] -%}
+    {%- if q -%}{%- set _ = parts.append('q=' + (q|urlencode)) -%}{%- endif -%}
+    {%- for v in filters.course or [] -%}{%- set _ = parts.append('course=' + (v|urlencode)) -%}{%- endfor -%}
+    {%- for v in filters.kind or [] -%}{%- set _ = parts.append('kind=' + (v|urlencode)) -%}{%- endfor -%}
+    {%- for v in filters.status or [] -%}{%- set _ = parts.append('status=' + (v|urlencode)) -%}{%- endfor -%}
+    {%- for v in filters.topic or [] -%}{%- set _ = parts.append('topic=' + (v|urlencode)) -%}{%- endfor -%}
+    {%- if filters.source_ref -%}{%- set _ = parts.append('source_ref=' + (filters.source_ref|urlencode)) -%}{%- endif -%}
+    {%- set _ = parts.append('page_size=' + (page_size|string)) -%}
+    {%- set _ = parts.append('page=' + (target_page|string)) -%}
+    <a class="page-link" href="?{{ parts | join('&') }}">{{ label }}</a>
+  {%- endif -%}
+{% endmacro %}
+
+{% block content %}
+<h1>טענות
+  <span style="color: var(--ink-faint); font-weight: 400; font-size: 22px;">·
+    {% if has_filter %}
+      {{ filtered_count }} מתוך {{ total_in_db }}
+    {% else %}
+      {{ total_in_db }}
+    {% endif %}
+  </span>
+</h1>
+
+<form action="/" method="get" class="filters">
+  {{ multi_filter('course', 'קורס', courses, filters.course, value_of='id', label_of='name') }}
+  {{ multi_filter('kind', 'סוג', ['axiom', 'theorem', 'lemma', 'definition', 'relation'], filters.kind) }}
+  {{ multi_filter_grouped('topic', 'נושא', topics, topic_groups, filters.topic) }}
+  {{ multi_filter('status', 'סטטוס', ['draft', 'self_proved', 'ai_verified', 'reviewed', 'canonical', 'formally_verified', 'conjectured'], filters.status) }}
+
+  <label class="single-field">
+    <span class="filter-label-inline">מקור</span>
+    <input type="text" name="source_ref" placeholder="lecture_..." value="{{ filters.source_ref or '' }}">
+  </label>
+
+  <label class="single-field">
+    <span class="filter-label-inline">בעמוד</span>
+    <select name="page_size">
+      {% for opt in page_size_options %}
+        <option value="{{ opt }}" {% if opt == page_size %}selected{% endif %}>{{ opt }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <input type="hidden" name="q" value="{{ q or '' }}">
+  <div class="actions-inline">
+    <button type="submit" class="btn">סנן</button>
+    <a href="/" class="btn secondary">נקה הכל</a>
+  </div>
+</form>
+
+{% if not claims %}
+  <div class="empty">
+    <div class="emoji">∅</div>
+    <h3>אין עדיין טענות שתואמות</h3>
+    <p>{% if has_filter %}נסה להסיר חלק מהמסננים, או{% else %}המאגר ריק.{% endif %} <a href="/claims/new">צור טענה חדשה</a>.</p>
+  </div>
+{% else %}
+
+<div class="paging-summary">
+  מציג <strong>{{ showing_from }}–{{ showing_to }}</strong> מתוך <strong>{{ filtered_count }}</strong>
+  {% if total_pages > 1 %}· עמוד {{ page }} מתוך {{ total_pages }}{% endif %}
+</div>
+
+<div class="cards">
+  {% for c in claims %}
+    <div class="card status-{{ c.color }}">
+      {% set name = c.statement | claim_name %}
+      <a href="/claims/{{ c.id }}" class="card-header">
+        {% if name %}<span class="claim-name">{{ name }}</span>{% endif %}
+        <span class="kind-badge kind-{{ c.kind }}">{{ c.kind }}</span>
+        <span class="pill pill-id">{{ c.id }}</span>
+      </a>
+      <div class="statement">
+        <a href="/claims/{{ c.id }}" class="title">{{ c.statement | claim_body | plain_md | truncate(220) }}</a>
+      </div>
+      <div class="meta">
+        {% if c.course %}<span class="pill pill-meta"><span class="label">קורס</span><span class="val">{{ c.course }}</span></span>{% endif %}
+        {% if c.topic and topic_to_group.get(c.topic) %}<span class="pill pill-meta pill-main-topic"><span class="label">תחום</span><span class="val">{{ topic_to_group[c.topic] }}</span></span>{% endif %}
+        {% if c.topic %}<span class="pill pill-meta"><span class="label">נושא</span><span class="val">{{ c.topic }}</span></span>{% endif %}
+        <span class="pill pill-meta"><span class="label">סטטוס</span><span class="val">{{ c.status }}</span></span>
+        {% if c.source_ref %}<span class="pill pill-meta"><span class="label">מקור</span><span class="val">{{ c.source_ref }}</span></span>{% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{% if total_pages > 1 %}
+<nav class="pager">
+  {{ pagelink('« ראשון', 1, disabled=(page == 1)) }}
+  {{ pagelink('‹ הקודם', page - 1, disabled=(page == 1)) }}
+  {% set start = [1, page - 2] | max %}
+  {% set end = [total_pages, page + 2] | min %}
+  {% if start > 1 %}{{ pagelink('…', start - 1, disabled=True) }}{% endif %}
+  {% for p in range(start, end + 1) %}
+    {{ pagelink(p, p, current=(p == page)) }}
+  {% endfor %}
+  {% if end < total_pages %}{{ pagelink('…', end + 1, disabled=True) }}{% endif %}
+  {{ pagelink('הבא ›', page + 1, disabled=(page == total_pages)) }}
+  {{ pagelink('אחרון »', total_pages, disabled=(page == total_pages)) }}
+</nav>
+{% endif %}
+
+{% endif %}
+{% endblock %}

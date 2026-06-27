@@ -1,0 +1,5 @@
+id: math_elementary
+name: מתמטיקה יסודי — אלגברה בסיסית
+prerequisites:
+- math_foundations
+schema_version: 1

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Knowledge DAG{% endblock %}</title>
+
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Heebo:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="/static/style.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+          onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}, {left: '\\[', right: '\\]', display: true}], throwOnError: false});"></script>
+
+  <script src="https://unpkg.com/htmx.org@1.9.12" crossorigin="anonymous"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a href="/" class="brand">
+        <img src="/static/favicon.svg" alt="">
+        Knowledge<span class="dot">·</span>DAG
+      </a>
+      <form action="/" method="get" class="search">
+        <input type="search" name="q" placeholder="חיפוש בטענות..." value="{{ q or '' }}">
+        <button type="submit">חפש</button>
+      </form>
+      <nav class="topnav">
+        <a href="/dag">גרף מלא</a>
+        <a href="/claims/new">+ טענה</a>
+        <a href="/proofs/new">+ הוכחה</a>
+        <a href="/courses">קורסים</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap content">
+    {% if flash %}<div class="flash">{{ flash }}</div>{% endif %}
+    {% if error %}<div class="error-banner">{{ error }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bottom"><div class="wrap"><span>Knowledge·DAG · v0.1</span></div></footer>
+</body>
+</html>

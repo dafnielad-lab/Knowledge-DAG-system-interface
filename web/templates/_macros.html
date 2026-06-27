@@ -1,0 +1,105 @@
+{# Reusable multi-select filter (popover with checkboxes, Alpine-powered).
+   Submits multiple values via form (?name=v1&name=v2&...).
+
+   Args:
+     name      — form field name
+     label     — Hebrew display label
+     options   — list of options. Either flat strings, or list of dicts.
+     selected  — list of currently-selected values
+     value_of  — if options are dicts, the key that holds the value (default = flat)
+     label_of  — if options are dicts, the key that holds the display (default = flat)
+#}
+{# Multi-select filter with Excel-style collapsible groups.
+   Each group is a collapsible section with a header (caret + name + "בחר הכל").
+   Topics not in any explicit group should be passed under an "אחר" key. #}
+{% macro multi_filter_grouped(name, label, options, groups, selected) %}
+  <div class="multi-filter" x-data="{ open: false, count: {{ selected|length }} }">
+    <button type="button" class="filter-button" @click="open = !open">
+      <span class="filter-label">{{ label }}</span>
+      <span class="filter-summary"
+            x-text="count === 0 ? '— הכל —' : (count + ' נבחרו')"></span>
+      <span class="caret">▾</span>
+    </button>
+    <div class="filter-popover filter-popover-wide" x-show="open" x-cloak @click.outside="open = false"
+         x-transition.opacity.duration.100ms>
+      <div class="popover-head">
+        <button type="button" class="link-btn"
+                @click="$el.closest('.filter-popover').querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false); count = 0;">
+          נקה הכל
+        </button>
+        <button type="button" class="link-btn" style="margin-right: 8px;"
+                @click="
+                  const groups = $el.closest('.filter-popover').querySelectorAll('.topic-group');
+                  const allExpanded = Array.from(groups).every(g => g.classList.contains('expanded'));
+                  groups.forEach(g => g.classList.toggle('expanded', !allExpanded));
+                ">
+          הרחב / כווץ הכל
+        </button>
+      </div>
+
+      {% for group_name, group_topics in groups.items() %}
+        <div class="topic-group">
+          <div class="topic-group-header">
+            <button type="button" class="group-toggle"
+                    @click="$el.closest('.topic-group').classList.toggle('expanded')">
+              <span class="caret-arrow">▸</span>
+              <span class="group-name">{{ group_name }}</span>
+              <span class="group-count" data-group-size="{{ group_topics|length }}">{{ group_topics|length }}</span>
+            </button>
+            <button type="button" class="group-select-all"
+                    @click="
+                      const root = $el.closest('.filter-popover');
+                      const boxes = Array.from($el.closest('.topic-group').querySelectorAll('input[type=checkbox]'));
+                      const allChecked = boxes.length > 0 && boxes.every(b => b.checked);
+                      boxes.forEach(b => b.checked = !allChecked);
+                      count = root.querySelectorAll('input:checked').length;
+                    ">
+              בחר הכל
+            </button>
+          </div>
+          <div class="topic-group-body">
+            {% for opt in group_topics %}
+              <label class="check-row sub">
+                <input type="checkbox" name="{{ name }}" value="{{ opt }}"
+                       {% if opt in selected %}checked{% endif %}
+                       @change="count = $el.closest('.filter-popover').querySelectorAll('input:checked').length;">
+                <span>{{ opt }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endmacro %}
+
+
+{% macro multi_filter(name, label, options, selected, value_of=None, label_of=None) %}
+  <div class="multi-filter" x-data="{ open: false, count: {{ selected|length }} }">
+    <button type="button" class="filter-button" @click="open = !open">
+      <span class="filter-label">{{ label }}</span>
+      <span class="filter-summary"
+            x-text="count === 0 ? '— הכל —' : (count + ' נבחרו')"></span>
+      <span class="caret">▾</span>
+    </button>
+    <div class="filter-popover" x-show="open" x-cloak @click.outside="open = false"
+         x-transition.opacity.duration.100ms>
+      <div class="popover-head">
+        <button type="button" class="link-btn"
+                @click="$el.closest('.filter-popover').querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false); count = 0;">
+          נקה
+        </button>
+      </div>
+      {% for opt in options %}
+        {% set value = opt[value_of] if value_of else opt %}
+        {% set display = opt[label_of] if label_of else opt %}
+        <label class="check-row">
+          <input type="checkbox" name="{{ name }}" value="{{ value }}"
+                 {% if value in selected %}checked{% endif %}
+                 @change="count = $el.closest('.filter-popover').querySelectorAll('input:checked').length;">
+          <span>{{ display }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  </div>
+{% endmacro %}

@@ -1,0 +1,5 @@
+id: math_uni_analysis
+name: אנליזה 1 (חדו״א, ODE, רב-משתני)
+prerequisites:
+- math_hs_5
+schema_version: 1

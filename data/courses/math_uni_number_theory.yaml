@@ -1,0 +1,5 @@
+id: math_uni_number_theory
+name: תורת המספרים האלמנטרית
+prerequisites:
+- math_hs_5
+schema_version: 1

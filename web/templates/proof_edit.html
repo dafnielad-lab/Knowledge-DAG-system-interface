@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'new' %}הוכחה חדשה{% else %}עריכת {{ proof.id }}{% endif %} · Knowledge DAG{% endblock %}
+
+{% block content %}
+<h1>{% if mode == 'new' %}הוכחה חדשה{% else %}עריכת <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--accent); direction: ltr;">{{ proof.id }}</span>{% endif %}</h1>
+
+<form class="form" method="post"
+      action="{% if mode == 'new' %}/ui/proofs/new{% else %}/ui/proofs/{{ proof.id }}/update{% endif %}">
+
+  <div class="field">
+    <label>ID</label>
+    <div class="hint">אנגלית / קו תחתון. דוגמה: <code>prf_pythagoras_v1</code></div>
+    <input type="text" name="id" value="{{ proof.id if proof else '' }}"
+           {% if mode == 'edit' %}readonly{% endif %} required pattern="[A-Za-z0-9_\-\.]+">
+  </div>
+
+  <div class="field">
+    <label>טענה שמוכחת (claim id)</label>
+    <input type="text" name="claim_id" value="{{ proof.claim_id if proof else (claim_id or '') }}" required>
+  </div>
+
+  <div class="field">
+    <label>שיטה</label>
+    <select name="method" required>
+      {% for m in ['informal', 'axiom', 'lean', 'ai_verified', 'truth_table', 'sat', 'omega', 'groebner', 'decision_procedure'] %}
+        <option value="{{ m }}" {% if proof and proof.method == m %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field">
+    <label>סטטוס</label>
+    <select name="status">
+      {% for s in ['draft', 'reviewed', 'verified'] %}
+        <option value="{{ s }}" {% if proof and proof.status == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field">
+    <label>תלויות</label>
+    <div class="hint">claim ids מופרדים בפסיק. דוגמה: <code>ax_em, thm_foo</code></div>
+    <input type="text" name="dependencies"
+           value="{{ proof.dependencies | join(', ') if proof and proof.dependencies else '' }}"
+           placeholder="ax_em, thm_foo">
+  </div>
+
+  <div class="field">
+    <label class="check">
+      <input type="checkbox" name="is_canonical" value="true" {% if proof and proof.is_canonical %}checked{% endif %}>
+      Canonical — ההוכחה הראשית של הטענה
+    </label>
+    <div class="hint">סימון יחליף כל הוכחה ראשית קיימת לאותה טענה.</div>
+  </div>
+
+  <div class="field">
+    <label>גוף ההוכחה</label>
+    <div class="hint">LaTeX/markdown</div>
+    <textarea name="body" required dir="auto">{{ proof.body if proof else '' }}</textarea>
+  </div>
+
+  <div class="actions">
+    <button type="submit" class="btn">{% if mode == 'new' %}צור{% else %}שמור{% endif %}</button>
+    <a href="{% if mode == 'edit' and proof %}/claims/{{ proof.claim_id }}{% else %}/{% endif %}" class="btn secondary">ביטול</a>
+  </div>
+</form>
+{% endblock %}

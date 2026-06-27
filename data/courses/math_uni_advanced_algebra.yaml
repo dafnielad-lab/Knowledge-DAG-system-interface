@@ -1,0 +1,5 @@
+id: math_uni_advanced_algebra
+name: אי-שוויונים וקומבינטוריקה אולימפית
+prerequisites:
+- math_hs_5
+schema_version: 1

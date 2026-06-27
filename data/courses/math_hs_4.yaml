@@ -1,0 +1,5 @@
+id: math_hs_4
+name: מתמטיקה תיכון 4 יחל
+prerequisites:
+- math_hs_3
+schema_version: 1

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'new' %}קורס חדש{% else %}עריכת {{ course.id }}{% endif %} · Knowledge DAG{% endblock %}
+
+{% block content %}
+<h1>{% if mode == 'new' %}קורס חדש{% else %}עריכת <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--accent); direction: ltr;">{{ course.id }}</span>{% endif %}</h1>
+
+<form class="form" method="post"
+      action="{% if mode == 'new' %}/ui/courses/new{% else %}/ui/courses/{{ course.id }}/update{% endif %}">
+
+  <div class="field">
+    <label>ID</label>
+    <input type="text" name="id" value="{{ course.id if course else '' }}"
+           {% if mode == 'edit' %}readonly{% endif %} required pattern="[A-Za-z0-9_\-\.]+">
+  </div>
+
+  <div class="field">
+    <label>שם</label>
+    <input type="text" name="name" value="{{ course.name if course else '' }}" required>
+  </div>
+
+  <div class="field">
+    <label>Prerequisites</label>
+    <div class="hint">course ids מופרדים בפסיק. דוגמה: <code>logic_1, set_theory_1</code></div>
+    <input type="text" name="prerequisites"
+           value="{{ course.prerequisites | join(', ') if course and course.prerequisites else '' }}"
+           placeholder="logic_1, set_theory_1">
+  </div>
+
+  <div class="actions">
+    <button type="submit" class="btn">{% if mode == 'new' %}צור{% else %}שמור{% endif %}</button>
+    <a href="/courses" class="btn secondary">ביטול</a>
+  </div>
+</form>
+{% endblock %}
