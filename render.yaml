@@ -1,0 +1,37 @@
+# Render.com blueprint — deploys the Knowledge DAG as a free web service.
+#
+# To deploy:
+#   1. Push this file to GitHub
+#   2. In Render: New + → Blueprint → connect this repo
+#   3. After first deploy: set AUTH_USERNAME and AUTH_PASSWORD in the
+#      service's Environment tab (Render won't auto-create them; sync=false)
+#
+# Notes for the free tier:
+#   • App sleeps after 15 minutes of inactivity, wakes in ~30 seconds.
+#   • Filesystem is ephemeral — edits made via the web UI WILL revert when
+#     the dyno restarts. The repo on GitHub remains the source of truth.
+#   • To persist edits across restarts, switch plan to "starter" ($7/mo) and
+#     add a persistent disk (uncomment the `disk:` block below).
+
+services:
+  - type: web
+    name: knowledge-dag
+    runtime: python
+    plan: free
+    region: frankfurt        # closest to Israel on the free tier
+    pythonVersion: "3.12"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn app:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    healthCheckPath: /
+
+    envVars:
+      - key: AUTH_USERNAME
+        sync: false          # set manually in Render UI after first deploy
+      - key: AUTH_PASSWORD
+        sync: false
+
+    # disk:                  # Uncomment + upgrade to "starter" to persist edits
+    #   name: knowledge-dag-data
+    #   mountPath: /opt/render/project/src/data
+    #   sizeGB: 1

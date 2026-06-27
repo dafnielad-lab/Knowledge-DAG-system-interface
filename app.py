@@ -7,6 +7,7 @@ Startup:
 """
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from api import courses as api_courses
 from api import cowork as api_cowork
 from api import proofs as api_proofs
 from storage import index
+from web import auth as web_auth
 from web import filters as web_filters
 from web import ui as web_ui
 from web import views as web_views
@@ -56,6 +58,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Knowledge DAG", version="0.1.0", lifespan=lifespan)
 
+# HTTP Basic Auth — active only when AUTH_USERNAME and AUTH_PASSWORD are set
+# (typically on cloud deploys). Locally with Run.bat both are unset → no auth.
+web_auth.install(app)
+
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # JSON API
@@ -71,4 +77,7 @@ app.include_router(web_ui.router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=False)
+    # Honor PORT env var for cloud platforms (Render sets it); default 8000 locally.
+    port = int(os.environ.get("PORT", "8000"))
+    host = os.environ.get("HOST", "127.0.0.1")
+    uvicorn.run("app:app", host=host, port=port, reload=False)
