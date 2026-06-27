@@ -3,7 +3,7 @@
 {% block title %}גרף ההקשרים המלא · Knowledge DAG{% endblock %}
 
 {% block content %}
-<h1>גרף ההקשרים המלא <span style="color: var(--ink-faint); font-weight: 400; font-size: 16px;">· אקסיומות למעלה · נגזרים למטה</span></h1>
+<h1>גרף ההקשרים המלא <span style="color: var(--ink-faint); font-weight: 400; font-size: 16px;">· פריסה אורגנית · לחיצה מדגישה דור 1</span></h1>
 
 <form id="dag-filter-form" class="filters" onsubmit="return false;">
   {{ multi_filter('course', 'קורס', courses, [], value_of='id', label_of='name') }}
@@ -13,6 +13,7 @@
     <button type="button" class="btn" id="apply-btn">החל</button>
     <button type="button" class="btn secondary" id="reset-btn">איפוס</button>
     <button type="button" class="btn secondary" id="fit-btn">התאם לחלון</button>
+    <button type="button" class="btn secondary" id="fullscreen-btn">מסך מלא ⛶</button>
   </div>
 </form>
 
@@ -23,14 +24,18 @@
   <span><span class="dot k-definition"></span> הגדרה</span>
   <span><span class="dot k-theorem"></span> משפט</span>
   <span><span class="dot k-lemma"></span> למה</span>
-  <span>· גלגלת לזום · גרור להזיז · לחיצה על צומת = פתיחת דף הטענה · ריחוף מציג שם</span>
+  <span>· גלגלת לזום · גרור להזיז · לחיצה = הדגשת דור 1 · לחיצה כפולה = פתיחת דף הטענה · ריחוף מציג שם</span>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/layout-base@2.0.1/layout-base.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cose-base@2.2.0/cose-base.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-fcose@2.2.0/cytoscape-fcose.js"></script>
 
 <script>
+if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
+  cytoscape.use(cytoscapeFcose);
+}
 (function() {
   const container = document.getElementById('dag-full-graph');
   const statusEl  = document.getElementById('dag-status');
@@ -63,17 +68,53 @@
       elements: elements,
       wheelSensitivity: 0.2,
       layout: {
-        name: 'dagre',
-        rankDir: 'TB',
-        nodeSep: data.nodes.length > 200 ? 15 : 30,
-        rankSep: data.nodes.length > 200 ? 40 : 70,
-        edgeSep: 8,
+        name: 'fcose',
+        // 'proof' = more iterations, much better untangling on dense graphs.
+        // Worth the extra ~2s on a 693-node graph since this is a one-shot render.
+        quality: 'proof',
+        randomize: true,
+        animate: false,
+        fit: true,
+        padding: 60,
+        // Disconnected components packed separately so islands don't crowd
+        // the main DAG body.
+        packComponents: true,
+        tile: true,
+        tilingPaddingVertical: 40,
+        tilingPaddingHorizontal: 40,
+        // ── Anti-overlap tuning (the main knobs the user is iterating on) ──
+        // Repulsion is the dominant force preventing label boxes from
+        // colliding. Bumped 8000 → 30000 because at 693 nodes with
+        // 140px-wide labels, weaker repulsion lets force equilibria settle
+        // with boxes still touching.
+        nodeRepulsion: 30000,
+        // Longer ideal edges spread sibling branches apart and give the
+        // anti-overlap pass room to breathe.
+        idealEdgeLength: 200,
+        // Lower elasticity → edges pull less, repulsion wins.
+        edgeElasticity: 0.15,
+        // Weaker gravity → the graph can grow outward instead of clumping
+        // toward the canvas center.
+        gravity: 0.05,
+        gravityRange: 3.8,
+        gravityCompound: 1.0,
+        gravityRangeCompound: 1.5,
+        // More iterations = the cooling phase actually converges to a
+        // non-overlapping layout on a graph this dense.
+        numIter: 4000,
+        // Minimum spacing the post-cool tiling step enforces. 75 wasn't
+        // enough for 140px-wide labels; 160 leaves clear gaps between boxes.
+        nodeSeparation: 160,
+        // Step size for the initial force layout — smaller = more stable
+        // convergence at the cost of speed.
+        step: 'all',
       },
       style: [
         { selector: 'node', style: {
             'label': 'data(label)',
             'text-valign': 'center', 'text-halign': 'center',
             'text-wrap': 'wrap', 'text-max-width': '140px',
+            'text-overflow-wrap': 'anywhere',
             'font-family': 'Heebo, sans-serif',
             'font-size': data.nodes.length > 200 ? '9px' : '11px',
             'shape': 'round-rectangle',
@@ -97,10 +138,84 @@
             'curve-style': 'bezier', 'arrow-scale': 0.7,
         }},
         { selector: 'node:hover', style: { 'border-width': 3 }},
+
+        // ── 1-hop highlight styles ──
+        // "Dimmed" = background nodes that stay clearly legible — the user
+        // wanted to SEE the rest of the graph, not have it disappear. The
+        // contrast comes from the highlight classes being bolder, not from
+        // hiding the surroundings.
+        { selector: 'node.dimmed', style: {
+            'opacity': 0.65,
+            'text-opacity': 0.7,
+        }},
+        { selector: 'edge.dimmed', style: {
+            'opacity': 0.7,
+        }},
+        { selector: 'node.focus-node', style: {
+            'border-color': '#6b2c2c',
+            'background-color': '#f0ead6',
+            'border-width': 3.5,
+            'color': '#1c1c1c',
+            'font-weight': 'bold',
+            'z-index': 9999,
+        }},
+        // hl-node-in = predecessors in the visual graph =
+        //   "what this claim is built ON" (its prerequisites).
+        { selector: 'node.hl-node-in', style: {
+            'border-color': '#4a6b3a',
+            'border-width': 3,
+            'background-color': '#f4f9f0',
+            'z-index': 100,
+        }},
+        // hl-node-out = successors in the visual graph =
+        //   "what is built ON TOP of this claim" (its dependents).
+        { selector: 'node.hl-node-out', style: {
+            'border-color': '#3a5b75',
+            'border-width': 3,
+            'background-color': '#eff5f9',
+            'z-index': 100,
+        }},
+        { selector: 'edge.hl-edge', style: {
+            'line-color': '#6b2c2c',
+            'target-arrow-color': '#6b2c2c',
+            'width': 2.5,
+            'opacity': 1,
+            'z-index': 50,
+        }},
       ],
     });
 
+    function clearHighlight() {
+      cy.elements().removeClass('focus-node hl-node-in hl-node-out hl-edge dimmed');
+    }
+
+    // Single tap on a node = highlight gen-1 neighborhood (both directions).
     cy.on('tap', 'node', function(evt) {
+      const node = evt.target;
+      clearHighlight();
+      const incomingEdges = node.incomers('edge');
+      const outgoingEdges = node.outgoers('edge');
+      const inNeighbors   = node.incomers('node');
+      const outNeighbors  = node.outgoers('node');
+      const keep = cy.collection()
+        .merge(node).merge(inNeighbors).merge(outNeighbors)
+        .merge(incomingEdges).merge(outgoingEdges);
+      cy.elements().difference(keep).addClass('dimmed');
+      incomingEdges.addClass('hl-edge');
+      outgoingEdges.addClass('hl-edge');
+      inNeighbors.addClass('hl-node-in');
+      outNeighbors.addClass('hl-node-out');
+      node.addClass('focus-node');
+    });
+
+    // Background tap = clear highlight.
+    cy.on('tap', function(evt) {
+      if (evt.target === cy) clearHighlight();
+    });
+
+    // Double tap on a node = open the claim page (moved off single tap so
+    // the highlight is actually visible).
+    cy.on('dbltap', 'node', function(evt) {
       const id = evt.target.id();
       if (id) window.location.href = '/claims/' + encodeURIComponent(id);
     });
@@ -140,8 +255,11 @@
         cy = null;
         return;
       }
-      statusEl.textContent = `מציג ${data.nodes.length} טענות · ${data.edges.length} קשרים`;
+      statusEl.textContent = `מסדר ${data.nodes.length} טענות · ${data.edges.length} קשרים…`;
+      // Let the browser paint the status before the layout hogs the main thread.
+      await new Promise(resolve => setTimeout(resolve, 0));
       renderDag(data);
+      statusEl.textContent = `מציג ${data.nodes.length} טענות · ${data.edges.length} קשרים`;
     } catch (e) {
       statusEl.textContent = 'שגיאה: ' + e;
     }
@@ -160,6 +278,27 @@
   });
   document.getElementById('fit-btn').addEventListener('click', () => {
     if (cy) cy.fit(undefined, 30);
+  });
+
+  // ── Fullscreen toggle ──
+  const fsBtn = document.getElementById('fullscreen-btn');
+  fsBtn.addEventListener('click', () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else if (container.requestFullscreen) {
+      container.requestFullscreen();
+    }
+  });
+  // When entering/exiting fullscreen the container resizes — re-fit the
+  // graph so it uses the new area, and update the button label.
+  document.addEventListener('fullscreenchange', () => {
+    const inFs = document.fullscreenElement === container;
+    container.classList.toggle('is-fullscreen', inFs);
+    fsBtn.textContent = inFs ? 'יציאה ממסך מלא ⛶' : 'מסך מלא ⛶';
+    if (cy) {
+      cy.resize();
+      cy.fit(undefined, 30);
+    }
   });
 
   // Initial load — render everything; user picks filters from there.

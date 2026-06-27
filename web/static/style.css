@@ -893,6 +893,20 @@ p { margin: 0 0 14px; color: var(--ink-soft); }
   min-height: 500px;
 }
 
+/* Fullscreen mode (Fullscreen API toggle on the graph container) — let
+   the canvas fill the entire viewport, no border, no margin. The browser
+   handles the actual fullscreen; we just style the element when it's the
+   :fullscreen target. */
+.dag-graph.is-fullscreen,
+.dag-graph:fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg-elevated);
+}
+
 .dag-tooltip strong { display: block; margin-bottom: 2px; }
 
 .dag-legend {
