@@ -408,10 +408,23 @@ p { margin: 0 0 14px; color: var(--ink-soft); }
   box-shadow: var(--shadow-md);
 }
 
-/* Status as right border accent */
+/* Status as right border accent (quick-scan: green/amber/red) */
 .card.status-green { border-right-color: var(--status-green); }
 .card.status-amber { border-right-color: var(--status-amber); }
 .card.status-red   { border-right-color: var(--status-red); }
+
+/* Formally-verified claims highlight the entire card — green tint + thicker border.
+   Used to mark material the user has reviewed end-to-end (proof + dependency chain). */
+.card.card-status-formally_verified {
+  background: linear-gradient(to left, rgba(74, 107, 58, 0.10), var(--bg-elevated) 65%);
+  border-color: var(--status-green);
+  border-right-width: 6px;
+  box-shadow: 0 1px 4px rgba(74, 107, 58, 0.08);
+}
+.card.card-status-formally_verified:hover {
+  background: linear-gradient(to left, rgba(74, 107, 58, 0.16), var(--bg-elevated) 65%);
+}
+.card.card-status-formally_verified .claim-name { color: #2c5b1a; }
 
 /* Kind badge — small pill at top */
 .kind-badge {
@@ -525,6 +538,15 @@ p { margin: 0 0 14px; color: var(--ink-soft); }
   margin: 0 0 24px;
   letter-spacing: -0.005em;
 }
+
+/* When the focus claim is formally_verified — highlight the statement block green */
+.detail.detail-status-formally_verified .claim-statement {
+  background: linear-gradient(to left, rgba(74, 107, 58, 0.10), transparent 70%);
+  border-right: 4px solid var(--status-green);
+  padding: 18px 20px;
+  border-radius: 4px;
+}
+.detail.detail-status-formally_verified .claim-name { color: #2c5b1a; }
 .claim-statement p { margin: 0; color: var(--ink); }
 .claim-statement strong { font-weight: 700; }
 .claim-statement code {
@@ -621,6 +643,26 @@ p { margin: 0 0 14px; color: var(--ink-soft); }
 .status-pill.green { color: var(--status-green); background: rgba(74, 107, 58, 0.08); }
 .status-pill.amber { color: var(--status-amber); background: rgba(176, 138, 62, 0.08); }
 .status-pill.red   { color: var(--status-red);   background: rgba(154, 58, 58, 0.08); }
+
+/* Per-status color palette — distinct hue per status.
+   Used on both card meta pills and the detail page tagline pill. */
+.pill-status-draft              { color: #6b6b6b; border-color: #c4c0b6; background: #f4f1e8; }
+.pill-status-self_proved        { color: #9a6b2c; border-color: #c8a674; background: #faf3e8; }
+.pill-status-ai_verified        { color: #3a5b75; border-color: #7ba0bd; background: #eff5f9; }
+.pill-status-reviewed           { color: #2c6b6b; border-color: #74b8b8; background: #e8f5f5; }
+.pill-status-canonical          { color: #4a6b3a; border-color: #82a070; background: #f4f9f0; }
+.pill-status-formally_verified  { color: #2c5b1a; border-color: #4a6b3a; background: #d9eecf; font-weight: 600; }
+.pill-status-conjectured        { color: #9a3a3a; border-color: #c87474; background: #fde8e8; }
+.pill-status-formally_verified .val,
+.pill-status-formally_verified .label { color: inherit; }
+/* If color is already specified on .pill .val, the per-status color overrides it */
+.pill.pill-meta.pill-status-draft .val,
+.pill.pill-meta.pill-status-self_proved .val,
+.pill.pill-meta.pill-status-ai_verified .val,
+.pill.pill-meta.pill-status-reviewed .val,
+.pill.pill-meta.pill-status-canonical .val,
+.pill.pill-meta.pill-status-formally_verified .val,
+.pill.pill-meta.pill-status-conjectured .val { color: inherit; }
 
 /* ─── Proof cards (inside claim view) ─── */
 .proof-card {

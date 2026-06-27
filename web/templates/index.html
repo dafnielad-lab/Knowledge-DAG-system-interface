@@ -74,7 +74,7 @@
 
 <div class="cards">
   {% for c in claims %}
-    <div class="card status-{{ c.color }}">
+    <div class="card status-{{ c.color }} card-status-{{ c.status }}">
       {% set name = c.statement | claim_name %}
       <a href="/claims/{{ c.id }}" class="card-header">
         {% if name %}<span class="claim-name">{{ name }}</span>{% endif %}
@@ -88,7 +88,7 @@
         {% if c.course %}<span class="pill pill-meta"><span class="label">קורס</span><span class="val">{{ c.course }}</span></span>{% endif %}
         {% if c.topic and topic_to_group.get(c.topic) %}<span class="pill pill-meta pill-main-topic"><span class="label">תחום</span><span class="val">{{ topic_to_group[c.topic] }}</span></span>{% endif %}
         {% if c.topic %}<span class="pill pill-meta"><span class="label">נושא</span><span class="val">{{ c.topic }}</span></span>{% endif %}
-        <span class="pill pill-meta"><span class="label">סטטוס</span><span class="val">{{ c.status }}</span></span>
+        <span class="pill pill-meta pill-status-{{ c.status }}"><span class="label">סטטוס</span><span class="val">{{ c.status }}</span></span>
         {% if c.source_ref %}<span class="pill pill-meta"><span class="label">מקור</span><span class="val">{{ c.source_ref }}</span></span>{% endif %}
       </div>
     </div>

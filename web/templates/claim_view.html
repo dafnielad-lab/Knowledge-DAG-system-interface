@@ -17,14 +17,14 @@
 {% endmacro %}
 
 {% block content %}
-<div class="detail">
+<div class="detail detail-status-{{ claim.status }}">
   <header class="claim-header">
     {% set name = claim.statement | claim_name %}
     <div class="tagline">
       {% if name %}<span class="claim-name">{{ name }}</span>{% endif %}
       <span class="kind-badge kind-{{ claim.kind }}">{{ claim.kind }}</span>
       <span class="pill pill-id">{{ claim.id }}</span>
-      <span class="status-pill {{ effective.color }}">{{ claim.status }}</span>
+      <span class="status-pill pill-status-{{ claim.status }}">{{ claim.status }}</span>
       {% if claim.course %}<span class="pill pill-meta"><span class="label">קורס</span><span class="val">{{ claim.course }}</span></span>{% endif %}
       {% if claim.topic %}<span class="pill pill-meta"><span class="label">נושא</span><span class="val">{{ claim.topic }}</span></span>{% endif %}
       {% if effective.modulo %}
