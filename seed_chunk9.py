@@ -23,6 +23,7 @@ def P(pid, cid, deps, body, method="informal", status="reviewed", canonical=True
                  method=method, status=status, is_canonical=canonical)
 
 
+JHS = "math_jhs"
 HS3 = "math_hs_3"
 HS4 = "math_hs_4"
 HS5 = "math_hs_5"
@@ -33,6 +34,8 @@ COURSES: list[Course] = []
 
 CLAIMS = [
     # ═══ Advanced geometry ═══
+    C("thm_triangle_area_base_height", "theorem", JHS, "גאומטריה",
+      r"**שטח משולש = חצי בסיס × גובה:** $S = \tfrac{1}{2} \cdot a \cdot h_a$, כאשר $a$ אורך אחת הצלעות (הבסיס) ו-$h_a$ הוא הגובה אליה מהקודקוד הנגדי. הנוסחה היסודית לחישוב שטח משולש."),
     C("thm_triangle_area_sin", "theorem", HS4, "גאומטריה",
       r"**שטח משולש לפי סינוס:** $S = \frac{1}{2} a b \sin C$ — חצי מכפלת שתי צלעות בסינוס הזווית הכלואה ביניהן."),
     C("thm_heron_formula", "theorem", HS5, "גאומטריה",
@@ -254,9 +257,13 @@ CLAIMS = [
 
 PROOFS = [
     # ── Geometry ──
+    P("prf_triangle_area_base_height", "thm_triangle_area_base_height",
+      ["def_triangle"],
+      "הנוסחה היסודית לחישוב שטח משולש. ההצדקה הקלאסית: שכפול המשולש סביב אחת הצלעות יוצר מקבילית בעלת בסיס $a$ וגובה $h_a$, ששטחה $a \\cdot h_a$ (שטח מקבילית). המשולש הוא חצי מהמקבילית, ולכן $S = \\tfrac{1}{2} a h_a$. $\\blacksquare$",
+      method="axiom"),
     P("prf_triangle_area_sin", "thm_triangle_area_sin",
-      ["def_triangle", "def_sin", "def_right_triangle"],
-      "נוריד גובה $h$ מקודקוד $A$ אל הצלע $BC$ (אורך $a$). אז $h = b \\sin C$ במשולש ימני שנוצר. שטח: $S = \\tfrac{1}{2} \\cdot a \\cdot h = \\tfrac{1}{2} a b \\sin C$. $\\blacksquare$"),
+      ["thm_triangle_area_base_height", "def_sin", "def_right_triangle"],
+      "נוריד גובה $h_a$ מקודקוד $A$ אל הצלע $BC$ (אורך $a$). במשולש הישר-זווית שנוצר, $h_a = b \\sin C$ (לפי הגדרת הסינוס במשולש ישר-זווית).\n\nהצבה בנוסחת השטח (בסיס × גובה / 2): $S = \\tfrac{1}{2} \\cdot a \\cdot h_a = \\tfrac{1}{2} a b \\sin C$. $\\blacksquare$"),
     P("prf_heron_formula", "thm_heron_formula",
       ["thm_triangle_area_sin", "thm_law_of_cosines", "thm_sin_cos_pythagorean"],
       "מ-$S = \\tfrac{1}{2} a b \\sin C$ ו-$\\cos C = \\frac{a^2+b^2-c^2}{2ab}$ (קוסינוסים), $\\sin^2 C = 1 - \\cos^2 C = \\frac{(2ab)^2 - (a^2+b^2-c^2)^2}{(2ab)^2}$.\n\nפתיחה אלגברית ארוכה: $16 S^2 = 2 a^2 b^2 + 2 b^2 c^2 + 2 c^2 a^2 - a^4 - b^4 - c^4 = (a+b+c)(-a+b+c)(a-b+c)(a+b-c) = 16 s (s-a)(s-b)(s-c)$.\n\nלכן $S = \\sqrt{s(s-a)(s-b)(s-c)}$. $\\blacksquare$"),
