@@ -5,13 +5,19 @@ method: informal
 status: reviewed
 dependencies:
 - def_circle
-- ax_sss_congruence
-- thm_isosceles_triangle_base_angles
+- ax_hl_congruence
+- def_right_triangle
 is_canonical: true
-date_added: '2026-06-27T16:13:44.126814Z'
+date_added: '2026-06-27T20:41:51.335588Z'
 schema_version: 1
 ---
 
-יהי $AB$ מיתר, $O$ מרכז המעגל, ו-$OC \perp AB$ עם $C$ על $AB$.
+יהי $O$ מרכז המעגל, $AB$ מיתר, ו-$CD$ קוטר המאונך ל-$AB$ בנקודה $M$.
 
-$\triangle OAC$ ו-$\triangle OBC$: $OA = OB$ (רדיוסים), $OC$ משותף, וזוויות ישרות ב-$C$. לפי חפיפה (היפוטנוזה-ניצב), המשולשים חופפים, ולכן $AC = BC$. $\blacksquare$
+נסתכל במשולשים $\triangle OMA$ ו-$\triangle OMB$. שניהם ישרי-זווית ב-$M$ (כי $CD \perp AB$).
+
+$OA = OB$ (שני רדיוסים) — אלה היתרים של המשולשים הללו.
+
+$OM$ ניצב משותף.
+
+לפי חפיפת יתר-ניצב, $\triangle OMA \cong \triangle OMB$, ובפרט $MA = MB$. כלומר הקוטר חוצה את המיתר. $\blacksquare$

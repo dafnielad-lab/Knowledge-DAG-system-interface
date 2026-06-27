@@ -5,12 +5,20 @@ method: informal
 status: reviewed
 dependencies:
 - thm_equation_of_circle
-- thm_difference_of_squares
+- thm_completing_the_square
 is_canonical: true
-date_added: '2026-06-27T16:34:26.423690Z'
+date_added: '2026-06-27T20:41:51.335588Z'
 schema_version: 1
 ---
 
-$(x - a)^2 + (y - b)^2 = r^2$ נפתח: $x^2 - 2ax + a^2 + y^2 - 2by + b^2 = r^2$, ובסידור: $x^2 + y^2 + D x + E y + F = 0$ עם $D = -2a$, $E = -2b$, $F = a^2 + b^2 - r^2$.
+נתונה משוואה כללית $x^2 + y^2 + Dx + Ey + F = 0$. נשלים ריבועים לכל אחד מהמשתנים בנפרד.
 
-ההפך — השלמת ריבועים: $x^2 + Dx = (x + D/2)^2 - D^2/4$, ובדומה ל-$y$. נקבל מעגל עם מרכז $(-D/2, -E/2)$ ורדיוס בריבוע $D^2/4 + E^2/4 - F$. $\blacksquare$
+לפי משפט השלמת ריבוע: $x^2 + Dx = \left(x + \tfrac{D}{2}\right)^2 - \tfrac{D^2}{4}$ ו-$y^2 + Ey = \left(y + \tfrac{E}{2}\right)^2 - \tfrac{E^2}{4}$.
+
+נציב במשוואה:
+
+$\left(x + \tfrac{D}{2}\right)^2 - \tfrac{D^2}{4} + \left(y + \tfrac{E}{2}\right)^2 - \tfrac{E^2}{4} + F = 0$
+
+$\left(x + \tfrac{D}{2}\right)^2 + \left(y + \tfrac{E}{2}\right)^2 = \tfrac{D^2 + E^2 - 4F}{4}$.
+
+אם הצד הימני חיובי, זו משוואת מעגל עם מרכז $\left(-\tfrac{D}{2}, -\tfrac{E}{2}\right)$ ורדיוס $r = \tfrac{1}{2}\sqrt{D^2 + E^2 - 4F}$. אם הוא אפס המעגל מנוון לנקודה, ואם הוא שלילי אין פתרונות ממשיים. $\blacksquare$

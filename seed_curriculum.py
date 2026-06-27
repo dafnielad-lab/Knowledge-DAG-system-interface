@@ -28,6 +28,11 @@ from seed_chunk8 import COURSES as COURSES_CHUNK8, CLAIMS as CLAIMS_CHUNK8, PROO
 from seed_chunk9 import COURSES as COURSES_CHUNK9, CLAIMS as CLAIMS_CHUNK9, PROOFS as PROOFS_CHUNK9
 from seed_chunk10 import COURSES as COURSES_CHUNK10, CLAIMS as CLAIMS_CHUNK10, PROOFS as PROOFS_CHUNK10
 from seed_uni_courses import COURSES as COURSES_UNI, migrate_claims_to_uni_courses
+from seed_chunk_audit_fixes import (
+    CLAIMS as CLAIMS_AUDIT_FIXES,
+    PROOFS as PROOFS_AUDIT_FIXES,
+    apply_replace_proofs as apply_audit_fix_replacements,
+)
 
 
 DATA = ROOT / "data"
@@ -1322,11 +1327,11 @@ def main() -> None:
     all_claims = (CLAIMS_CHUNK1 + CLAIMS_CHUNK2 + CLAIMS_CHUNK3
                   + CLAIMS_CHUNK4 + CLAIMS_CHUNK5 + CLAIMS_CHUNK6
                   + CLAIMS_CHUNK7 + CLAIMS_BF + CLAIMS_CHUNK8
-                  + CLAIMS_CHUNK9 + CLAIMS_CHUNK10)
+                  + CLAIMS_CHUNK9 + CLAIMS_CHUNK10 + CLAIMS_AUDIT_FIXES)
     all_proofs = (PROOFS_CHUNK1 + PROOFS_CHUNK2 + PROOFS_CHUNK3
                   + PROOFS_CHUNK4 + PROOFS_CHUNK5 + PROOFS_CHUNK6
                   + PROOFS_CHUNK7 + PROOFS_BF + PROOFS_CHUNK8
-                  + PROOFS_CHUNK9 + PROOFS_CHUNK10)
+                  + PROOFS_CHUNK9 + PROOFS_CHUNK10 + PROOFS_AUDIT_FIXES)
 
     n_courses = sum(write_if_new(c, files.load_course, files.save_course, "course")
                     for c in all_courses)
@@ -1345,6 +1350,11 @@ def main() -> None:
         print(f"reclassified {moved} claims to university courses:")
         for target, n in sorted(by_target.items()):
             print(f"  {n:>4} -> {target}")
+
+    # Audit phase-1 fixes: force-overwrite 11 proofs whose declared deps
+    # didn't match what their bodies actually use.
+    n_replaced = apply_audit_fix_replacements(DATA)
+    print(f"audit fix: overwrote {n_replaced} proofs with corrected dependencies")
 
     index.rebuild_index(DATA, DB)
     print(f"index rebuilt at {DB}")

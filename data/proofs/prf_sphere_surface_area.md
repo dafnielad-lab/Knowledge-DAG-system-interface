@@ -5,13 +5,19 @@ method: informal
 status: reviewed
 dependencies:
 - def_sphere
-- thm_sphere_volume
+- thm_surface_of_revolution
 - def_definite_integral
 is_canonical: true
-date_added: '2026-06-27T18:26:22.743198Z'
+date_added: '2026-06-27T20:41:51.335588Z'
 schema_version: 1
 ---
 
-**גישת אינטגרל:** סובבים חצי מעגל $y = \sqrt{R^2 - x^2}$ סביב ציר $x$. שטח פני סיבוב: $A = 2\pi \int_{-R}^R y \sqrt{1 + (y')^2} dx$.
+ניצור את הספירה כסיבוב חצי-המעגל $y = \sqrt{R^2 - x^2}$, $-R \leq x \leq R$, סביב ציר $x$.
 
-חישוב $y' = \frac{-x}{\sqrt{R^2 - x^2}}$, ולכן $\sqrt{1 + (y')^2} = \frac{R}{y}$. הצבה: $A = 2\pi \int_{-R}^R y \cdot \frac{R}{y} dx = 2\pi R \cdot 2R = 4\pi R^2$. $\blacksquare$
+לפי נוסחת שטח-פני-סיבוב: $S = 2\pi \int_{-R}^{R} y \sqrt{1 + (y')^2}\, dx$.
+
+מחשבים: $y' = -\tfrac{x}{\sqrt{R^2 - x^2}}$, ולכן $1 + (y')^2 = \tfrac{R^2}{R^2 - x^2}$, ו-$\sqrt{1 + (y')^2} = \tfrac{R}{\sqrt{R^2 - x^2}}$.
+
+$y \sqrt{1 + (y')^2} = \sqrt{R^2 - x^2} \cdot \tfrac{R}{\sqrt{R^2 - x^2}} = R$ (קבוע).
+
+אז $S = 2\pi \int_{-R}^{R} R\, dx = 2\pi R \cdot 2R = 4\pi R^2$. $\blacksquare$

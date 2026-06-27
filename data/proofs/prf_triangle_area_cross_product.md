@@ -6,12 +6,13 @@ status: reviewed
 dependencies:
 - thm_cross_product_magnitude
 - thm_triangle_area_sin
-- thm_dot_product_geometric
 is_canonical: true
-date_added: '2026-06-27T18:26:22.743198Z'
+date_added: '2026-06-27T20:41:51.335588Z'
 schema_version: 1
 ---
 
-$|\vec{AB} \times \vec{AC}| = |\vec{AB}| \cdot |\vec{AC}| \sin\theta$, כאשר $\theta$ הזווית ב-$A$.
+יהי $\triangle ABC$. נסמן $\vec u = \vec{AB}$ ו-$\vec v = \vec{AC}$, ויהי $\theta$ הזווית ב-$A$.
 
-שטח משולש $= \tfrac{1}{2} |\vec{AB}| |\vec{AC}| \sin\theta = \tfrac{1}{2} |\vec{AB} \times \vec{AC}|$. $\blacksquare$
+לפי משפט גודל המכפלה הוקטורית: $\|\vec u \times \vec v\| = \|\vec u\| \cdot \|\vec v\| \cdot \sin \theta = |AB| \cdot |AC| \cdot \sin \theta$.
+
+לפי משפט שטח משולש לפי סינוס: $S(\triangle ABC) = \tfrac{1}{2} |AB| \cdot |AC| \cdot \sin \theta = \tfrac{1}{2} \|\vec u \times \vec v\| = \tfrac{1}{2} \|\vec{AB} \times \vec{AC}\|$. $\blacksquare$
