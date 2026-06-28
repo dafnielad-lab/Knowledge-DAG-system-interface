@@ -249,7 +249,16 @@ p { margin: 0 0 14px; color: var(--ink-soft); }
   text-transform: uppercase;
   font-weight: 500;
 }
-.filter-button .filter-summary { color: var(--ink); font-weight: 500; }
+.filter-button .filter-summary {
+  color: var(--ink);
+  font-weight: 500;
+  /* Stable width — without this the button shrinks/grows when the text
+     toggles between "— הכל —" and "N נבחרו", which shifts every other
+     filter and button in the flex bar and looks like an unintended
+     submit. 78px fits both states up to 99 selections. */
+  min-width: 78px;
+  text-align: start;
+}
 .filter-button .caret { color: var(--ink-faint); font-size: 10px; }
 
 .filter-popover {
