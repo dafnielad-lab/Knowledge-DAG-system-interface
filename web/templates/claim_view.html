@@ -85,7 +85,7 @@
             <span class="status-pill {% if p.status == 'verified' %}green{% elif p.status == 'reviewed' %}green{% else %}amber{% endif %}">{{ p.status }}</span>
             <a href="/proofs/{{ p.id }}/edit" style="margin-right: auto; color: var(--ink-faint); text-decoration: none; font-size: 13px;">ערוך</a>
           </header>
-          <div class="proof-body">{{ p.body | render_md }}</div>
+          <div class="proof-body">{{ p.body | render_md | linkify_refs(name_map) }}</div>
           {% if p.dependencies %}
           <div class="deps">
             <span class="deps-label">תלויות:</span>
@@ -163,6 +163,97 @@
   </section>
   {% endif %}
 </div>
+
+<script>
+// ── Inline proof expansion ──
+// Clicking a .claim-ref button (rendered by the linkify_refs server-side
+// filter) toggles an inline panel below it. First open fetches the cited
+// claim's inline_proof JSON and inserts its HTML — which itself contains
+// more .claim-ref buttons, so the user can keep drilling down until
+// everything bottoms out on axioms/definitions.
+(function() {
+  const KATEX_OPTS = {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false},
+      {left: '\\[', right: '\\]', display: true},
+    ],
+    throwOnError: false,
+  };
+
+  function buildPanelHTML(data) {
+    const kindLabel = {axiom: 'אקסיומה', definition: 'הגדרה', theorem: 'משפט', lemma: 'למה', relation: 'יחס'}[data.kind] || data.kind;
+    const stmt = data.statement_html
+      ? `<div class="inline-claim-stmt">${data.statement_html}</div>` : '';
+    let proofSection = '';
+    if (data.proof_html) {
+      proofSection = `<div class="inline-proof-label">הוכחה:</div><div class="inline-claim-proof">${data.proof_html}</div>`;
+    } else if (data.kind === 'axiom') {
+      proofSection = `<div class="inline-claim-note">אקסיומה — מקובלת ללא הוכחה.</div>`;
+    } else if (data.kind === 'definition') {
+      proofSection = `<div class="inline-claim-note">הגדרה — אין הוכחה.</div>`;
+    } else {
+      proofSection = `<div class="inline-claim-note">אין הוכחה זמינה במערכת.</div>`;
+    }
+    return `
+      <div class="inline-claim-head">
+        <span class="kind-badge kind-${data.kind}">${kindLabel}</span>
+        <strong>${data.name || data.id}</strong>
+        <a href="/claims/${encodeURIComponent(data.id)}" class="inline-claim-link" title="פתח בעמוד נפרד">↗</a>
+      </div>
+      ${stmt}
+      ${proofSection}
+    `;
+  }
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.claim-ref');
+    if (!btn) return;
+    e.preventDefault();
+    const cid = btn.dataset.claimId;
+    if (!cid) return;
+
+    // Panel lives as the very next sibling. Create on first click.
+    let panel = btn.nextElementSibling;
+    if (!panel || !panel.classList.contains('claim-ref-panel')) {
+      panel = document.createElement('div');
+      panel.className = 'claim-ref-panel';
+      panel.dataset.loaded = 'false';
+      btn.after(panel);
+    }
+
+    const isOpen = panel.classList.contains('open');
+    if (isOpen) {
+      panel.classList.remove('open');
+      btn.classList.remove('open');
+      return;
+    }
+
+    panel.classList.add('open');
+    btn.classList.add('open');
+
+    if (panel.dataset.loaded === 'false') {
+      panel.innerHTML = '<div class="inline-claim-loading">טוען…</div>';
+      fetch('/api/claims/' + encodeURIComponent(cid) + '/inline_proof')
+        .then(r => {
+          if (!r.ok) throw new Error(r.status);
+          return r.json();
+        })
+        .then(data => {
+          panel.innerHTML = buildPanelHTML(data);
+          panel.dataset.loaded = 'true';
+          if (window.renderMathInElement) {
+            window.renderMathInElement(panel, KATEX_OPTS);
+          }
+        })
+        .catch(err => {
+          panel.innerHTML = `<div class="inline-claim-error">שגיאה בטעינה: ${err}</div>`;
+        });
+    }
+  });
+})();
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>

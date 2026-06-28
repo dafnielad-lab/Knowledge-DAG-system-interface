@@ -130,6 +130,74 @@ def get_traceability(claim_id: str, db=Depends(get_db)) -> dict:
     return dag.traceability(claim_id, index.get_dep_map(db))
 
 
+@router.get("/{claim_id}/inline_proof")
+def get_inline_proof(claim_id: str,
+                     data_dir=Depends(get_data_dir),
+                     db=Depends(get_db)) -> dict:
+    """Return a small bundle for inline rendering inside another proof body.
+
+    Used by the proof-body click-to-expand UX: clicking a referenced claim
+    fetches this and renders {name, kind, statement, proof body, deps}
+    inline. The HTML returned is already linkified so the user can keep
+    drilling down recursively.
+    """
+    claim = files.load_claim(data_dir, claim_id)
+    if claim is None:
+        raise HTTPException(404, f"Claim not found: {claim_id}")
+
+    # Build a name_map for the linkifier — limit to claims referenced in the
+    # statement or any candidate proof so we don't ship the whole catalogue.
+    from web.filters import claim_name, render_md, claim_body, linkify_refs
+
+    # Find the canonical proof (if any).
+    proof = None
+    for path in (data_dir / "proofs").glob("*.md"):
+        p = files.load_proof(data_dir, path.stem)
+        if p and p.claim_id == claim_id and p.is_canonical:
+            proof = p
+            break
+
+    # Gather referenced IDs from both statement and proof body (cheap regex)
+    import re as _re
+    text_blob = (claim.statement or "") + "\n" + (proof.body if proof else "")
+    ref_ids = set(_re.findall(r"\b((?:def_|thm_|ax_|lem_|prf_|axc_)[a-z0-9_]+)\b", text_blob))
+    if proof:
+        ref_ids.update(proof.dependencies)
+
+    name_map: dict[str, str] = {}
+    if ref_ids:
+        rows = db.execute(
+            f"SELECT id, statement FROM claims WHERE id IN ({','.join('?' * len(ref_ids))})",
+            list(ref_ids),
+        ).fetchall()
+        for r in rows:
+            n = claim_name(r["statement"])
+            if n:
+                name_map[r["id"]] = n
+
+    # Render statement (without the bold-name prefix) and proof body.
+    stmt_html = str(linkify_refs(render_md(claim_body(claim.statement)), name_map))
+    proof_html = None
+    deps_out: list[dict] = []
+    if proof:
+        proof_html = str(linkify_refs(render_md(proof.body), name_map))
+        deps_out = [
+            {"id": d, "name": name_map.get(d, d)}
+            for d in proof.dependencies
+        ]
+
+    return {
+        "id": claim.id,
+        "kind": claim.kind,
+        "name": claim_name(claim.statement) or claim.id,
+        "course": claim.course,
+        "statement_html": stmt_html,
+        "proof_html": proof_html,
+        "proof_id": proof.id if proof else None,
+        "deps": deps_out,
+    }
+
+
 @router.get("/{claim_id}/dependents")
 def get_dependents(claim_id: str, db=Depends(get_db)) -> dict:
     if not db.execute("SELECT 1 FROM claims WHERE id = ?", (claim_id,)).fetchone():

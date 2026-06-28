@@ -87,6 +87,43 @@ def claim_body(text: str | None) -> str:
     return _NAME_PREFIX.sub("", text, count=1).lstrip()
 
 
+# ─── In-text reference linkifier ───
+# Proof bodies cite other claims as `` `def_event` `` (markdown backticks),
+# which render as <code>def_event</code>. linkify_refs swaps those into a
+# clickable button that the JS expands inline into the cited claim's proof.
+_REF_IN_CODE = re.compile(
+    r"<code>((?:def_|thm_|ax_|lem_|prf_|axc_)[a-z0-9_]+)</code>"
+)
+
+
+def linkify_refs(html: str | Markup, name_map: dict | None = None) -> Markup:
+    """Replace <code>claim_id</code> with a clickable .claim-ref button.
+
+    Only replaces when the id is present in name_map — unknown ids stay as
+    <code> so they're still visible but don't pretend to be navigable.
+    """
+    if not html:
+        return Markup("")
+    names = name_map or {}
+
+    def _replace(m: re.Match) -> str:
+        cid = m.group(1)
+        if cid not in names:
+            return m.group(0)
+        # Hebrew display name (or fallback to id if missing/empty)
+        label = (names.get(cid) or cid).strip()
+        # The button is .ltr so its English data-attr doesn't fight RTL bidi,
+        # but the inner Hebrew label stays in its own dir=rtl span.
+        return (
+            f'<button type="button" class="claim-ref ltr" data-claim-id="{cid}" title="{cid}">'
+            f'<span class="ref-caret">▸</span>'
+            f'<span class="ref-name" dir="rtl">{label}</span>'
+            f'</button>'
+        )
+
+    return Markup(_REF_IN_CODE.sub(_replace, str(html)))
+
+
 # ─── LaTeX → Unicode for non-KaTeX surfaces (graph, plain-text tree) ───
 
 _LATEX_REPLACEMENTS = {
@@ -157,3 +194,4 @@ def register(jinja_env) -> None:
     jinja_env.filters["claim_name"] = claim_name
     jinja_env.filters["claim_body"] = claim_body
     jinja_env.filters["clean_latex_for_label"] = clean_latex_for_label
+    jinja_env.filters["linkify_refs"] = linkify_refs

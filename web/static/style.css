@@ -59,6 +59,92 @@ code {
   display: inline-block;
 }
 
+/* ─── Claim references inside proof bodies — click to expand inline ─── */
+.claim-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 2px;
+  padding: 2px 9px 2px 7px;
+  background: var(--accent-tint);
+  border: 1px solid var(--accent-soft);
+  border-radius: 12px;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.92em;
+  font-weight: 500;
+  cursor: pointer;
+  line-height: 1.5;
+  vertical-align: baseline;
+  transition: background 0.12s, color 0.12s;
+}
+.claim-ref:hover {
+  background: var(--accent);
+  color: var(--bg-elevated);
+}
+.claim-ref .ref-caret {
+  font-size: 0.8em;
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+.claim-ref.open .ref-caret { transform: rotate(90deg); }
+.claim-ref .ref-name { direction: rtl; }
+
+.claim-ref-panel {
+  display: none;
+  margin: 10px 0 14px 0;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-right: 3px solid var(--accent-soft);
+  border-radius: 4px 0 0 4px;
+  font-size: 0.95em;
+}
+.claim-ref-panel.open { display: block; }
+.claim-ref-panel .inline-claim-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--rule);
+}
+.claim-ref-panel .inline-claim-head strong {
+  color: var(--accent);
+  font-size: 1.05em;
+}
+.claim-ref-panel .inline-claim-link {
+  margin-right: auto;
+  color: var(--ink-faint);
+  text-decoration: none;
+  font-size: 1.1em;
+}
+.claim-ref-panel .inline-claim-link:hover { color: var(--accent); }
+.claim-ref-panel .inline-claim-stmt {
+  margin-bottom: 10px;
+}
+.claim-ref-panel .inline-proof-label {
+  font-weight: 600;
+  color: var(--ink-faint);
+  font-size: 0.88em;
+  margin: 6px 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.claim-ref-panel .inline-claim-proof p { margin: 6px 0; }
+.claim-ref-panel .inline-claim-note {
+  font-style: italic;
+  color: var(--ink-faint);
+  padding: 4px 0;
+}
+.claim-ref-panel .inline-claim-loading,
+.claim-ref-panel .inline-claim-error {
+  padding: 8px 0;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+.claim-ref-panel .inline-claim-error { color: var(--status-red); }
+
 pre {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   background: var(--code-bg);

@@ -179,10 +179,18 @@ def claim_view(claim_id: str, request: Request,
 
     # Collect every claim id referenced on this page so we can label
     # tree/dep/citing entries by their Hebrew name instead of the bare id.
+    # Also harvest IDs that appear inside proof body `` `id` `` mentions
+    # (not always a subset of declared deps) so linkify_refs can swap them
+    # into clickable inline-expand buttons.
+    import re as _re
+    _ID_IN_TEXT = _re.compile(r"\b((?:def_|thm_|ax_|lem_|prf_|axc_)[a-z0-9_]+)\b")
+
     referenced_ids = set(_collect_tree_ids(trace_ancestors))
     referenced_ids.update(_collect_tree_ids(trace_descendants))
     for p in proofs:
         referenced_ids.update(p.get("dependencies", []))
+        referenced_ids.update(_ID_IN_TEXT.findall(p.get("body", "") or ""))
+    referenced_ids.update(_ID_IN_TEXT.findall(claim.statement or ""))
     for _, cid in citing:
         referenced_ids.add(cid)
     name_map = _build_name_map(db, referenced_ids)
