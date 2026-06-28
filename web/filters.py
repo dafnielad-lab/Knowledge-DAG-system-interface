@@ -88,40 +88,102 @@ def claim_body(text: str | None) -> str:
 
 
 # ─── In-text reference linkifier ───
-# Proof bodies cite other claims as `` `def_event` `` (markdown backticks),
-# which render as <code>def_event</code>. linkify_refs swaps those into a
-# clickable button that the JS expands inline into the cited claim's proof.
+# Proof bodies cite other claims in two styles:
+#   (a) Markdown backticks: `` `def_event` `` → renders as <code>def_event</code>
+#   (b) Bare text:           "לפי def_event מתקיים..."
+# Both should become a clickable .claim-ref button. We handle (a) first,
+# then walk the remaining HTML and process bare IDs in text nodes only —
+# skipping inside <code>/<pre>/<a>/<button>/<script>/<style> and inside
+# $...$ / $$...$$ math segments (KaTeX renders those client-side).
 _REF_IN_CODE = re.compile(
     r"<code>((?:def_|thm_|ax_|lem_|prf_|axc_)[a-z0-9_]+)</code>"
 )
+_BARE_REF_PATTERN = re.compile(
+    r"(?<![\w./-])((?:def_|thm_|ax_|lem_|prf_|axc_)[a-z0-9_]+)(?![\w./-])"
+)
+_HTML_TAG = re.compile(r"(<[^>]+>)")
+_SKIP_ELEMENTS = {"code", "pre", "a", "button", "script", "style", "kbd", "samp"}
+_MATH_DISPLAY = re.compile(r"\$\$[\s\S]+?\$\$")
+_MATH_INLINE_LINKIFY = re.compile(r"\$(?:\\.|[^$\\])+?\$")
 
 
-def linkify_refs(html: str | Markup, name_map: dict | None = None) -> Markup:
-    """Replace <code>claim_id</code> with a clickable .claim-ref button.
+def _build_ref_button(cid: str, label: str) -> str:
+    safe_label = (label or cid).strip()
+    return (
+        f'<button type="button" class="claim-ref ltr" data-claim-id="{cid}" title="{cid}">'
+        f'<span class="ref-caret">▸</span>'
+        f'<span class="ref-name" dir="rtl">{safe_label}</span>'
+        f'</button>'
+    )
 
-    Only replaces when the id is present in name_map — unknown ids stay as
-    <code> so they're still visible but don't pretend to be navigable.
-    """
-    if not html:
-        return Markup("")
-    names = name_map or {}
+
+def _replace_bare_in_text(text: str, names: dict) -> str:
+    """Replace bare claim-id occurrences in plain text, leaving math alone."""
+    stash: list[str] = []
+
+    def _save(m: re.Match) -> str:
+        stash.append(m.group(0))
+        return f"@@LRMATH{len(stash) - 1}@@"
+
+    text = _MATH_DISPLAY.sub(_save, text)
+    text = _MATH_INLINE_LINKIFY.sub(_save, text)
 
     def _replace(m: re.Match) -> str:
         cid = m.group(1)
         if cid not in names:
             return m.group(0)
-        # Hebrew display name (or fallback to id if missing/empty)
-        label = (names.get(cid) or cid).strip()
-        # The button is .ltr so its English data-attr doesn't fight RTL bidi,
-        # but the inner Hebrew label stays in its own dir=rtl span.
-        return (
-            f'<button type="button" class="claim-ref ltr" data-claim-id="{cid}" title="{cid}">'
-            f'<span class="ref-caret">▸</span>'
-            f'<span class="ref-name" dir="rtl">{label}</span>'
-            f'</button>'
-        )
+        return _build_ref_button(cid, names[cid])
 
-    return Markup(_REF_IN_CODE.sub(_replace, str(html)))
+    text = _BARE_REF_PATTERN.sub(_replace, text)
+
+    for i, chunk in enumerate(stash):
+        text = text.replace(f"@@LRMATH{i}@@", chunk)
+    return text
+
+
+def linkify_refs(html: str | Markup, name_map: dict | None = None) -> Markup:
+    """Replace claim-id references (both <code>X</code> and bare X in text)
+    with a clickable .claim-ref button.
+
+    Only converts ids that exist in name_map — unknown ids stay verbatim so
+    they're visible but don't pretend to be navigable.
+    """
+    if not html:
+        return Markup("")
+    names = name_map or {}
+
+    # Step 1: <code>X</code> → button (when X is in name_map)
+    def _code_replace(m: re.Match) -> str:
+        cid = m.group(1)
+        if cid not in names:
+            return m.group(0)
+        return _build_ref_button(cid, names[cid])
+
+    text = _REF_IN_CODE.sub(_code_replace, str(html))
+
+    # Step 2: walk the HTML, processing only text content outside skip-elements.
+    # We split on tags and track open/close depth for SKIP_ELEMENTS.
+    parts = _HTML_TAG.split(text)
+    skip_depth = 0
+    out: list[str] = []
+    for part in parts:
+        if part.startswith("<"):
+            tag_match = re.match(r"</?([a-zA-Z][\w-]*)", part)
+            if tag_match:
+                tname = tag_match.group(1).lower()
+                if tname in _SKIP_ELEMENTS:
+                    if part.startswith("</"):
+                        skip_depth = max(0, skip_depth - 1)
+                    elif not part.rstrip().endswith("/>"):
+                        skip_depth += 1
+            out.append(part)
+        else:
+            if skip_depth == 0 and part:
+                out.append(_replace_bare_in_text(part, names))
+            else:
+                out.append(part)
+
+    return Markup("".join(out))
 
 
 # ─── LaTeX → Unicode for non-KaTeX surfaces (graph, plain-text tree) ───
