@@ -5,10 +5,10 @@ method: informal
 status: reviewed
 dependencies:
 - def_circle
-- thm_isosceles_triangle_base_angles
+- thm_exterior_angle
 - thm_triangle_angle_sum
 is_canonical: true
-date_added: '2026-06-27T16:03:56.115377Z'
+date_added: '2026-06-28T15:07:55.518549Z'
 schema_version: 1
 ---
 

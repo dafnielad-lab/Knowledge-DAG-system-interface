@@ -5,8 +5,9 @@ method: informal
 status: reviewed
 dependencies:
 - thm_mean_value_theorem
+- thm_increasing_test
 is_canonical: true
-date_added: '2026-06-27T16:20:58.288163Z'
+date_added: '2026-06-28T15:07:55.497050Z'
 schema_version: 1
 ---
 

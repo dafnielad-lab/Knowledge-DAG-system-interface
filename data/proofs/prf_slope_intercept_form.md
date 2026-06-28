@@ -4,10 +4,9 @@ claim_id: thm_slope_intercept_form
 method: informal
 status: reviewed
 dependencies:
-- thm_two_point_form_of_line
 - def_slope_between_points
 is_canonical: true
-date_added: '2026-06-27T17:14:35.074631Z'
+date_added: '2026-06-28T15:07:55.556050Z'
 schema_version: 1
 ---
 

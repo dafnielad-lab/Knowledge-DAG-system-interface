@@ -7,9 +7,8 @@ dependencies:
 - thm_vieta_formulas
 - ax_distributive_law
 - thm_right_distributive_law
-- def_subtraction
 is_canonical: true
-date_added: '2026-06-27T16:03:56.115377Z'
+date_added: '2026-06-28T15:07:55.504049Z'
 schema_version: 1
 ---
 

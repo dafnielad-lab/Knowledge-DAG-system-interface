@@ -4,13 +4,22 @@ claim_id: thm_cos_special_values
 method: informal
 status: reviewed
 dependencies:
-- thm_sin_special_values
-- thm_sin_complementary
+- def_cos
+- def_sin
+- def_unit_circle
 is_canonical: true
-date_added: '2026-06-27T17:14:35.074631Z'
+date_added: '2026-06-28T15:07:55.570049Z'
 schema_version: 1
 ---
 
-מהזהות $\cos\theta = \sin(\frac{\pi}{2} - \theta)$:
+לפי הגדרת הקוסינוס, $\cos\theta$ הוא הקואורדינטה $x$ של הנקודה $P_\theta=(\cos\theta,\sin\theta)$ במעגל היחידה $x^2+y^2=1$ המתאימה לזווית $\theta$ הנמדדת נגד כיוון השעון מהציר החיובי של $x$.
 
-$\cos 0 = \sin \frac{\pi}{2} = 1$, $\cos \frac{\pi}{6} = \sin \frac{\pi}{3} = \frac{\sqrt{3}}{2}$, $\cos \frac{\pi}{4} = \sin \frac{\pi}{4} = \frac{\sqrt{2}}{2}$, $\cos \frac{\pi}{3} = \sin \frac{\pi}{6} = \frac{1}{2}$, $\cos \frac{\pi}{2} = \sin 0 = 0$. $\blacksquare$
+**$\cos 0 = 1$:** עבור $\theta=0$ הנקודה $P_0$ היא המפגש של הציר החיובי של $x$ עם מעגל היחידה, כלומר $(1,0)$. הקואורדינטה $x$ היא $1$.
+
+**$\cos\frac{\pi}{2} = 0$:** עבור $\theta=\frac{\pi}{2}$ (סיבוב של רבע מעגל נגד כיוון השעון) הנקודה היא $(0,1)$. הקואורדינטה $x$ היא $0$.
+
+**$\cos\frac{\pi}{3} = \frac{1}{2}$:** נקח משולש שווה־צלעות $OAB$ בו $O=(0,0)$, $A=(1,0)$, ו־$B=P_{\pi/3}$ על מעגל היחידה (הזווית במרכז היא $60^\circ=\frac{\pi}{3}$). מכיוון ש־$|OA|=|OB|=1$ והזווית ביניהן היא $\frac{\pi}{3}$, גם $|AB|=1$ (משולש שווה־צלעות). אם נפיל אנך מ־$B$ אל ציר ה־$x$ נקבל את הנקודה $(\cos\frac{\pi}{3},0)$ והאנך חוצה את הצלע $OA$ (מטעמי סימטריה במשולש שווה־צלעות) — לכן $\cos\frac{\pi}{3}=\frac{|OA|}{2}=\frac{1}{2}$.
+
+**$\cos\frac{\pi}{4} = \frac{\sqrt{2}}{2}$:** עבור $\theta=\frac{\pi}{4}$ (חוצה־הזווית של הרביע הראשון), הנקודה $P_{\pi/4}$ מקיימת מטעמי סימטריה ביחס לקו $y=x$ את $\cos\frac{\pi}{4}=\sin\frac{\pi}{4}$. בהצבה במשוואת מעגל היחידה: $2\cos^2\frac{\pi}{4}=1$, ולכן $\cos\frac{\pi}{4}=\frac{\sqrt{2}}{2}$ (חיובי כי הנקודה ברביע הראשון).
+
+**$\cos\frac{\pi}{6} = \frac{\sqrt{3}}{2}$:** הנקודה $P_{\pi/6}=(\cos\frac{\pi}{6},\sin\frac{\pi}{6})$ נמצאת על מעגל היחידה, ולכן $\cos^2\frac{\pi}{6}+\sin^2\frac{\pi}{6}=1$. במשולש $OP_{\pi/6}P_{-\pi/6}$ — שתי הצלעות $OP_{\pm\pi/6}$ באורך $1$ והזווית במרכז היא $\frac{\pi}{3}$ — שוב מקבלים משולש שווה־צלעות, כך שהמיתר $|P_{\pi/6}P_{-\pi/6}|=1$. מיתר זה אנכי לציר ה־$x$ ואורכו שווה ל־$2\sin\frac{\pi}{6}$, מכאן $\sin\frac{\pi}{6}=\frac{1}{2}$. בהצבה: $\cos^2\frac{\pi}{6}=1-\frac{1}{4}=\frac{3}{4}$, ולכן $\cos\frac{\pi}{6}=\frac{\sqrt{3}}{2}$ (חיובי ברביע הראשון). $\blacksquare$

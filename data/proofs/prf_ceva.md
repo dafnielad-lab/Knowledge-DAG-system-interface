@@ -4,10 +4,9 @@ claim_id: thm_ceva
 method: informal
 status: reviewed
 dependencies:
-- def_triangle
 - thm_menelaus
 is_canonical: true
-date_added: '2026-06-27T18:28:08.122596Z'
+date_added: '2026-06-28T15:07:55.489051Z'
 schema_version: 1
 ---
 

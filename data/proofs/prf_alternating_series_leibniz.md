@@ -7,8 +7,9 @@ dependencies:
 - def_partial_sum
 - def_series_convergence
 - def_limit_of_sequence
+- thm_monotone_convergence
 is_canonical: true
-date_added: '2026-06-27T17:14:35.075131Z'
+date_added: '2026-06-28T15:07:55.479550Z'
 schema_version: 1
 ---
 

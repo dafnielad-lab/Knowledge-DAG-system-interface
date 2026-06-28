@@ -5,9 +5,9 @@ method: informal
 status: reviewed
 dependencies:
 - thm_stewart_theorem
-- thm_angle_bisectors_concur
+- thm_angle_bisector_theorem
 is_canonical: true
-date_added: '2026-06-27T18:48:38.235747Z'
+date_added: '2026-06-28T15:07:55.482551Z'
 schema_version: 1
 ---
 

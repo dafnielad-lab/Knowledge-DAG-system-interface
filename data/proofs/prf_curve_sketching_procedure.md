@@ -5,11 +5,13 @@ method: informal
 status: reviewed
 dependencies:
 - thm_increasing_test
+- thm_decreasing_test
 - thm_first_derivative_test
 - thm_concavity_second_derivative
+- thm_fermat_extremum
 - def_vertical_asymptote
 is_canonical: true
-date_added: '2026-06-27T18:26:22.743198Z'
+date_added: '2026-06-28T15:07:55.494051Z'
 schema_version: 1
 ---
 

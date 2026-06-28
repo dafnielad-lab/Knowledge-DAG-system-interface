@@ -7,10 +7,9 @@ dependencies:
 - def_quadratic_function
 - ax_distributive_law
 - def_natural_power
-- thm_difference_of_squares
 - thm_square_nonnegative
 is_canonical: true
-date_added: '2026-06-27T16:03:56.115377Z'
+date_added: '2026-06-28T15:07:55.549549Z'
 schema_version: 1
 ---
 

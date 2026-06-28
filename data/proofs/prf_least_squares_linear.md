@@ -4,10 +4,9 @@ claim_id: thm_least_squares_linear
 method: informal
 status: reviewed
 dependencies:
-- def_expected_value
 - thm_fermat_extremum
 is_canonical: true
-date_added: '2026-06-27T18:47:27.564532Z'
+date_added: '2026-06-28T15:07:55.526551Z'
 schema_version: 1
 ---
 

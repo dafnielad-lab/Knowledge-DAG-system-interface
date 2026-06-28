@@ -4,11 +4,10 @@ claim_id: thm_maclaurin_geometric
 method: informal
 status: reviewed
 dependencies:
-- def_maclaurin_series
 - thm_geometric_series_convergence
 is_canonical: true
-date_added: '2026-06-27T18:47:27.564532Z'
+date_added: '2026-06-28T15:07:55.529551Z'
 schema_version: 1
 ---
 
-ידוע $\sum x^n = \frac{1}{1-x}$ עבור $|x| < 1$ (טור הנדסי). זה בדיוק טור מקלורין של $\frac{1}{1-x}$, ניתן לאמת ע״י נגזרות $f^{(n)}(0) = n!$. $\blacksquare$
+ידוע $\sum_{n=0}^{\infty} x^n = \frac{1}{1-x}$ עבור $|x| < 1$ (התכנסות הטור ההנדסי). זו בדיוק ההצגה המבוקשת. $\blacksquare$

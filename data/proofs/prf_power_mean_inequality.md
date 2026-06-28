@@ -6,9 +6,8 @@ status: reviewed
 dependencies:
 - thm_jensen_inequality
 - def_convex_function
-- def_concave_function
 is_canonical: true
-date_added: '2026-06-27T18:48:38.235747Z'
+date_added: '2026-06-28T15:07:55.543051Z'
 schema_version: 1
 ---
 

@@ -7,9 +7,9 @@ dependencies:
 - def_definite_integral
 - def_derivative_at_point
 - thm_extreme_value_theorem
-- thm_definite_integral_additivity
+- thm_squeeze_theorem
 is_canonical: true
-date_added: '2026-06-27T16:20:58.288163Z'
+date_added: '2026-06-28T15:02:41.618553Z'
 schema_version: 1
 ---
 

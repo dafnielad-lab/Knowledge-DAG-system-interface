@@ -5,9 +5,8 @@ method: informal
 status: reviewed
 dependencies:
 - thm_triangle_inequality
-- thm_triangle_inequality_vectors
 is_canonical: true
-date_added: '2026-06-27T17:14:35.075131Z'
+date_added: '2026-06-28T15:02:41.669551Z'
 schema_version: 1
 ---
 

@@ -6,9 +6,8 @@ status: reviewed
 dependencies:
 - def_normal_distribution
 - thm_expected_value_linearity
-- thm_variance_sum_independent
 is_canonical: true
-date_added: '2026-06-27T18:26:22.743198Z'
+date_added: '2026-06-28T15:07:55.535050Z'
 schema_version: 1
 ---
 

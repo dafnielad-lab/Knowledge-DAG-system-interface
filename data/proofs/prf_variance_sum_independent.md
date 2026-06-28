@@ -8,8 +8,9 @@ dependencies:
 - def_expected_value
 - def_independent_random_variables
 - thm_expected_value_linearity
+- thm_expected_value_product_independent
 is_canonical: true
-date_added: '2026-06-27T17:22:39.263705Z'
+date_added: '2026-06-28T15:07:55.564550Z'
 schema_version: 1
 ---
 

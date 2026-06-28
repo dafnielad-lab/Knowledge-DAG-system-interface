@@ -6,8 +6,9 @@ status: reviewed
 dependencies:
 - def_geometric_sequence
 - thm_power_addition_rule
+- def_proof_by_induction
 is_canonical: true
-date_added: '2026-06-27T16:13:44.126814Z'
+date_added: '2026-06-28T15:07:55.513550Z'
 schema_version: 1
 ---
 

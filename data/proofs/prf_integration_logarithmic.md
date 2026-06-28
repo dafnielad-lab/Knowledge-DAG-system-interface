@@ -6,9 +6,8 @@ status: reviewed
 dependencies:
 - thm_integral_one_over_x
 - thm_integral_substitution
-- thm_derivative_log_natural
 is_canonical: true
-date_added: '2026-06-27T16:34:26.423690Z'
+date_added: '2026-06-28T15:07:55.522550Z'
 schema_version: 1
 ---
 

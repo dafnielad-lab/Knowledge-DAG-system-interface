@@ -5,11 +5,10 @@ method: informal
 status: reviewed
 dependencies:
 - thm_law_of_sines
-- thm_sin_addition_formula
-- thm_sin_subtraction_formula
 - thm_sum_to_product_sin
+- thm_difference_to_product_sin
 is_canonical: true
-date_added: '2026-06-27T18:28:08.122596Z'
+date_added: '2026-06-28T15:07:55.525050Z'
 schema_version: 1
 ---
 

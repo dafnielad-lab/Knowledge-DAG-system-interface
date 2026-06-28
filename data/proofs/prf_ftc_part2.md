@@ -6,8 +6,9 @@ status: reviewed
 dependencies:
 - thm_ftc_part1
 - thm_antiderivative_differ_by_constant
+- def_definite_integral
 is_canonical: true
-date_added: '2026-06-27T16:20:58.288163Z'
+date_added: '2026-06-28T15:07:55.505051Z'
 schema_version: 1
 ---
 

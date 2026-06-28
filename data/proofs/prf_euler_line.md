@@ -9,8 +9,9 @@ dependencies:
 - def_orthocenter
 - thm_medians_meet_at_centroid
 - def_vector_2d
+- thm_orthocenter_vector_identity
 is_canonical: true
-date_added: '2026-06-27T17:22:39.263705Z'
+date_added: '2026-06-28T15:07:55.501049Z'
 schema_version: 1
 ---
 

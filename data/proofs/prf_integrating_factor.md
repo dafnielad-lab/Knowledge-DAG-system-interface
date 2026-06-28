@@ -6,10 +6,8 @@ status: reviewed
 dependencies:
 - def_linear_first_order_ode
 - thm_derivative_product
-- thm_derivative_exp
-- thm_integral_substitution
 is_canonical: true
-date_added: '2026-06-27T18:26:22.743198Z'
+date_added: '2026-06-28T15:07:55.521049Z'
 schema_version: 1
 ---
 

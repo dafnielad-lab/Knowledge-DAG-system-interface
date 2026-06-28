@@ -6,9 +6,8 @@ status: reviewed
 dependencies:
 - thm_cos_addition_formula
 - thm_sin_complementary
-- thm_cos_even
 is_canonical: true
-date_added: '2026-06-27T16:13:44.126814Z'
+date_added: '2026-06-28T15:07:55.554551Z'
 schema_version: 1
 ---
 

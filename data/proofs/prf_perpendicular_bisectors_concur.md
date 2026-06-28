@@ -6,9 +6,8 @@ status: reviewed
 dependencies:
 - def_circumcenter
 - def_triangle
-- thm_pythagoras
 is_canonical: true
-date_added: '2026-06-27T17:22:39.263705Z'
+date_added: '2026-06-28T15:07:55.539049Z'
 schema_version: 1
 ---
 

@@ -4,10 +4,10 @@ claim_id: thm_de_moivre_for_roots
 method: informal
 status: reviewed
 dependencies:
-- thm_de_moivre
+- thm_euler_formula
 - thm_nth_roots_of_complex
 is_canonical: true
-date_added: '2026-06-27T18:48:38.235747Z'
+date_added: '2026-06-28T15:07:55.495550Z'
 schema_version: 1
 ---
 

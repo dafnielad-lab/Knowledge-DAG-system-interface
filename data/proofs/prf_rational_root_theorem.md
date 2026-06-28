@@ -5,10 +5,10 @@ method: informal
 status: reviewed
 dependencies:
 - def_polynomial
-- thm_gcd_lcm_product
+- thm_euclid_lemma
 - def_divisibility
 is_canonical: true
-date_added: '2026-06-27T18:47:27.564532Z'
+date_added: '2026-06-28T15:07:55.551049Z'
 schema_version: 1
 ---
 

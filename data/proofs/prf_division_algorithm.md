@@ -6,8 +6,9 @@ status: reviewed
 dependencies:
 - def_integers
 - ax_order_trichotomy
+- thm_well_ordering_principle
 is_canonical: true
-date_added: '2026-06-27T15:58:40.082207Z'
+date_added: '2026-06-28T15:07:55.500050Z'
 schema_version: 1
 ---
 

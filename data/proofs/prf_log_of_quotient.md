@@ -8,8 +8,8 @@ dependencies:
 - thm_exp_addition
 - thm_exp_negative
 is_canonical: true
-date_added: '2026-06-27T16:13:44.126814Z'
+date_added: '2026-06-28T15:07:55.528049Z'
 schema_version: 1
 ---
 
-$\frac{x}{y} = x \cdot y^{-1} = b^u \cdot b^{-v} = b^{u-v}$, ולכן $\log_b(x/y) = u - v = \log_b x - \log_b y$. $\blacksquare$
+יהיו $x, y > 0$. לפי הגדרת הלוגריתם, נסמן $u = \log_b x$ ו-$v = \log_b y$, כך ש-$x = b^u$ ו-$y = b^v$. לפי תכונת החזקה השלילית, $y^{-1} = b^{-v}$. לכן $\frac{x}{y} = x \cdot y^{-1} = b^u \cdot b^{-v}$, ולפי תכונת החזקות הסכומית, $b^u \cdot b^{-v} = b^{u-v}$. מהגדרת הלוגריתם נובע ש-$\log_b(x/y) = u - v = \log_b x - \log_b y$. $\blacksquare$

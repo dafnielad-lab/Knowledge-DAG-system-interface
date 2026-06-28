@@ -1,14 +1,14 @@
 ---
 id: prf_sum_of_two_squares
 claim_id: thm_sum_of_two_squares
-method: axiom
+method: informal
 status: reviewed
 dependencies:
 - def_prime
 - def_congruence_mod
-- thm_fermat_little
+- thm_wilson_theorem
 is_canonical: true
-date_added: '2026-06-27T18:28:08.122596Z'
+date_added: '2026-06-28T15:07:55.558549Z'
 schema_version: 1
 ---
 

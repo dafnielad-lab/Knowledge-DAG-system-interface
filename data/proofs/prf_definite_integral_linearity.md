@@ -5,10 +5,8 @@ method: informal
 status: reviewed
 dependencies:
 - thm_ftc_part2
-- thm_integral_constant_multiple
-- thm_integral_sum
 is_canonical: true
-date_added: '2026-06-27T17:14:35.075131Z'
+date_added: '2026-06-28T15:07:55.498551Z'
 schema_version: 1
 ---
 

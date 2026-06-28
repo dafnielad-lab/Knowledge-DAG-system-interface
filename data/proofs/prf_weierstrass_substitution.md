@@ -5,12 +5,11 @@ method: informal
 status: reviewed
 dependencies:
 - def_tan
-- thm_half_angle_sin
-- thm_half_angle_cos
 - thm_sin_double_angle
 - thm_cos_double_angle
+- thm_pythagorean_identity_tan
 is_canonical: true
-date_added: '2026-06-27T18:28:08.122596Z'
+date_added: '2026-06-28T15:07:55.568551Z'
 schema_version: 1
 ---
 

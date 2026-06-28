@@ -6,9 +6,8 @@ status: reviewed
 dependencies:
 - thm_euclidean_algorithm
 - def_gcd
-- def_integers
 is_canonical: true
-date_added: '2026-06-27T16:34:26.423690Z'
+date_added: '2026-06-28T15:07:55.486550Z'
 schema_version: 1
 ---
 

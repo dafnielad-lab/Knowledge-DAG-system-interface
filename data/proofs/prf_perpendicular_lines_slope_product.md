@@ -5,9 +5,10 @@ method: informal
 status: reviewed
 dependencies:
 - thm_slope_intercept_form
-- thm_pythagoras
+- thm_slope_as_tan_of_inclination
+- thm_tangent_complement_identity
 is_canonical: true
-date_added: '2026-06-27T16:34:26.423190Z'
+date_added: '2026-06-28T15:07:55.540551Z'
 schema_version: 1
 ---
 

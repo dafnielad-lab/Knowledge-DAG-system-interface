@@ -7,7 +7,7 @@ dependencies:
 - thm_derivative_chain
 - def_antiderivative
 is_canonical: true
-date_added: '2026-06-27T16:20:58.288163Z'
+date_added: '2026-06-28T15:07:55.520051Z'
 schema_version: 1
 ---
 

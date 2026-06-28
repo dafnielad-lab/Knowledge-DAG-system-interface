@@ -5,10 +5,9 @@ method: informal
 status: reviewed
 dependencies:
 - def_quadratic_residue
-- def_prime
 - thm_no_zero_divisors
 is_canonical: true
-date_added: '2026-06-27T17:22:39.263705Z'
+date_added: '2026-06-28T15:07:55.557551Z'
 schema_version: 1
 ---
 

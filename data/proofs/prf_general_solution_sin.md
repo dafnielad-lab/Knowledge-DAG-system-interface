@@ -7,8 +7,9 @@ dependencies:
 - def_sin
 - def_arcsin
 - thm_sin_periodicity
+- thm_sin_supplementary
 is_canonical: true
-date_added: '2026-06-27T18:26:22.743198Z'
+date_added: '2026-06-28T15:07:55.509049Z'
 schema_version: 1
 ---
 

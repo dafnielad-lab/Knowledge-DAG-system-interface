@@ -7,8 +7,10 @@ dependencies:
 - def_hyperbolic_sin_cos
 - thm_derivative_exp
 - thm_derivative_sum
+- thm_derivative_quotient
+- thm_hyperbolic_identity
 is_canonical: true
-date_added: '2026-06-27T18:26:22.743198Z'
+date_added: '2026-06-28T15:07:55.514549Z'
 schema_version: 1
 ---
 

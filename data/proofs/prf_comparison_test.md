@@ -6,8 +6,9 @@ status: reviewed
 dependencies:
 - def_series_convergence
 - def_partial_sum
+- thm_monotone_convergence
 is_canonical: true
-date_added: '2026-06-27T17:14:35.075131Z'
+date_added: '2026-06-28T15:07:55.490049Z'
 schema_version: 1
 ---
 

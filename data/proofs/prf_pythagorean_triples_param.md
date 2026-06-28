@@ -6,9 +6,8 @@ status: reviewed
 dependencies:
 - def_pythagorean_triple
 - def_divisibility
-- thm_sum_of_two_squares
 is_canonical: true
-date_added: '2026-06-27T18:26:22.743198Z'
+date_added: '2026-06-28T15:07:55.545551Z'
 schema_version: 1
 ---
 

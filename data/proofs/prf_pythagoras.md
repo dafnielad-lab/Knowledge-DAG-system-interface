@@ -6,13 +6,12 @@ status: reviewed
 dependencies:
 - def_right_triangle
 - def_triangle
-- thm_triangle_angle_sum
 - thm_square_nonnegative
 - ax_distributive_law
 - thm_right_distributive_law
 - ax_addition_commutativity
 is_canonical: true
-date_added: '2026-06-27T15:58:40.082207Z'
+date_added: '2026-06-28T15:07:55.544551Z'
 schema_version: 1
 ---
 

@@ -4,10 +4,9 @@ claim_id: thm_qm_am_inequality
 method: informal
 status: reviewed
 dependencies:
-- thm_squared_inequality
 - thm_cauchy_schwarz_inequality_vectors
 is_canonical: true
-date_added: '2026-06-27T18:47:27.564532Z'
+date_added: '2026-06-28T15:07:55.547049Z'
 schema_version: 1
 ---
 

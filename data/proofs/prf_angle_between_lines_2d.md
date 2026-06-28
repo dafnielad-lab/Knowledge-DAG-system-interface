@@ -4,12 +4,13 @@ claim_id: thm_angle_between_lines_2d
 method: informal
 status: reviewed
 dependencies:
+- thm_slope_as_tan_of_inclination
 - thm_slope_intercept_form
 - def_tan
 - thm_sin_subtraction_formula
 - thm_cos_subtraction_formula
 is_canonical: true
-date_added: '2026-06-27T17:14:35.074631Z'
+date_added: '2026-06-28T15:07:55.481050Z'
 schema_version: 1
 ---
 

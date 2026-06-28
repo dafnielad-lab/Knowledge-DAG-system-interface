@@ -5,10 +5,9 @@ method: informal
 status: reviewed
 dependencies:
 - def_absolute_value
-- thm_absolute_value_nonnegative
 - ax_addition_preserves_order
 is_canonical: true
-date_added: '2026-06-27T15:32:36.129981Z'
+date_added: '2026-06-28T15:07:55.563050Z'
 schema_version: 1
 ---
 

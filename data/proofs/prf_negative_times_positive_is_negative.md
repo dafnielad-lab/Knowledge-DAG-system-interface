@@ -9,10 +9,8 @@ dependencies:
 - ax_additive_identity
 - ax_additive_inverse
 - thm_multiplication_by_negative_one
-- thm_double_negation
-- thm_product_of_negatives
 is_canonical: true
-date_added: '2026-06-27T15:32:36.129981Z'
+date_added: '2026-06-28T15:07:55.532549Z'
 schema_version: 1
 ---
 

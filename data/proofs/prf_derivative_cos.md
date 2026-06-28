@@ -7,9 +7,9 @@ dependencies:
 - def_derivative_at_point
 - thm_cos_addition_formula
 - thm_limit_sin_over_x
-- thm_derivative_sin
+- thm_limit_sum
 is_canonical: true
-date_added: '2026-06-27T16:20:58.288163Z'
+date_added: '2026-06-28T15:02:41.611553Z'
 schema_version: 1
 ---
 

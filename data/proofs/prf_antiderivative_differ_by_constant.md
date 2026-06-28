@@ -6,9 +6,8 @@ status: reviewed
 dependencies:
 - def_antiderivative
 - thm_mean_value_theorem
-- thm_derivative_sum
 is_canonical: true
-date_added: '2026-06-27T16:20:58.288163Z'
+date_added: '2026-06-28T15:07:55.484052Z'
 schema_version: 1
 ---
 

@@ -6,8 +6,9 @@ status: reviewed
 dependencies:
 - thm_rolle_theorem
 - thm_derivative_sum
+- thm_derivative_constant_multiple
 is_canonical: true
-date_added: '2026-06-27T18:47:27.564532Z'
+date_added: '2026-06-28T15:07:55.487552Z'
 schema_version: 1
 ---
 

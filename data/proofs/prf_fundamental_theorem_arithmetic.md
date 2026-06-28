@@ -6,9 +6,10 @@ status: reviewed
 dependencies:
 - def_prime
 - def_divisibility
-- thm_division_algorithm
+- thm_euclid_lemma
+- def_proof_by_induction
 is_canonical: true
-date_added: '2026-06-27T15:58:40.082207Z'
+date_added: '2026-06-28T15:07:55.506549Z'
 schema_version: 1
 ---
 

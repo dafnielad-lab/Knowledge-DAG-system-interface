@@ -4,11 +4,11 @@ claim_id: thm_cramer_rule
 method: informal
 status: reviewed
 dependencies:
-- def_determinant_2x2
-- thm_determinant_product
 - def_invertible_matrix
+- thm_laplace_expansion
+- thm_inverse_via_adjugate
 is_canonical: true
-date_added: '2026-06-27T17:22:39.263705Z'
+date_added: '2026-06-28T15:07:55.492549Z'
 schema_version: 1
 ---
 
