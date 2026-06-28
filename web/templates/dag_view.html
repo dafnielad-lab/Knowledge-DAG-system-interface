@@ -111,8 +111,13 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
         { selector: 'node', style: {
             'label': 'data(label)',
             'text-valign': 'center', 'text-halign': 'center',
-            'text-wrap': 'wrap', 'text-max-width': '140px',
-            'text-overflow-wrap': 'anywhere',
+            'text-wrap': 'wrap',
+            // Wider max-width so long Hebrew words have room without
+            // forcing mid-word breaks.
+            'text-max-width': '170px',
+            // Break only at whitespace — never split a word like
+            // "מכפלה" into "מכ פלה" mid-line.
+            'text-overflow-wrap': 'whitespace',
             'font-family': 'Heebo, sans-serif',
             'font-size': data.nodes.length > 200 ? '9px' : '11px',
             'shape': 'round-rectangle',
