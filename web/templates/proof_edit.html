@@ -64,4 +64,16 @@
     <a href="{% if mode == 'edit' and proof %}/claims/{{ proof.claim_id }}{% else %}/{% endif %}" class="btn secondary">ביטול</a>
   </div>
 </form>
+
+{% if mode == 'edit' and proof %}
+  {# Delete sits in its own form so the main save-button doesn't accidentally
+     trigger it, and it pushes to the right edge so it's visually separated
+     from the primary actions above. #}
+  <form method="post" action="/ui/proofs/{{ proof.id }}/delete" class="form danger-zone"
+        onsubmit="return confirm('האם למחוק את ההוכחה ' + {{ proof.id | tojson }} + '?\n\nהפעולה אינה הפיכה — אבל הטענה עצמה תישאר במערכת.');">
+    <h4>אזור מסוכן</h4>
+    <p class="hint">מחיקת ההוכחה היא בלתי-הפיכה. הטענה <code dir="ltr">{{ proof.claim_id }}</code> תישאר במערכת — רק קובץ ההוכחה הזה יוסר.</p>
+    <button type="submit" class="btn danger">מחק הוכחה</button>
+  </form>
+{% endif %}
 {% endblock %}

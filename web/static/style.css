@@ -257,6 +257,26 @@ header.top .wrap {
   border-color: var(--status-red);
 }
 
+/* Visually separate the irreversible-action block from the main form
+   so the delete button can't be missed-for-save. */
+.form.danger-zone {
+  margin-top: 32px;
+  padding: 18px 22px;
+  border: 1px solid var(--status-red);
+  border-radius: 4px;
+  background: #faf0f0;
+}
+.form.danger-zone h4 {
+  margin: 0 0 6px 0;
+  color: var(--status-red);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.form.danger-zone .hint {
+  margin: 0 0 12px 0;
+}
+
 .topnav { display: flex; gap: 4px; flex-shrink: 0; margin-right: auto; }
 .topnav a {
   color: var(--ink-soft);
