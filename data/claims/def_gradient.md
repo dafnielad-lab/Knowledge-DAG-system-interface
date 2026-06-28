@@ -8,4 +8,8 @@ date_added: '2026-06-27T17:22:39.263705Z'
 schema_version: 1
 ---
 
-**גרדיאנט:** $\nabla f := \left(\frac{\partial f}{\partial x}, \frac{\partial f}{\partial y}, \ldots\right)$ — וקטור הנגזרות החלקיות. מצביע על כיוון העלייה התלולה ביותר.
+**גרדיאנט:**
+
+$$\nabla f := \left(\frac{\partial f}{\partial x_1}, \frac{\partial f}{\partial x_2}, \ldots, \frac{\partial f}{\partial x_n}\right).$$
+
+וקטור הנגזרות החלקיות; מצביע על כיוון העלייה התלולה ביותר של $f$ בכל נקודה.

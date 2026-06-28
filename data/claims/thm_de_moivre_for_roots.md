@@ -8,4 +8,6 @@ date_added: '2026-06-27T18:47:27.564532Z'
 schema_version: 1
 ---
 
-**דה-מואבר עבור שורשים:** עבור $z = r(\cos\theta + i\sin\theta)$, שורש $n$ פתרון: $z^{1/n} = r^{1/n}\!\left(\cos\frac{\theta + 2\pi k}{n} + i\sin\frac{\theta + 2\pi k}{n}\right)$, $k = 0,\ldots,n-1$.
+**דה-מואבר עבור שורשים:** עבור $z = r(\cos\theta + i\sin\theta)$, ל-$z$ קיימים $n$ שורשים מסדר $n$, הנתונים על ידי
+
+$$\sqrt[n]{z} = \sqrt[n]{r}\left(\cos\frac{\theta + 2\pi k}{n} + i\sin\frac{\theta + 2\pi k}{n}\right), \qquad k = 0, 1, \ldots, n-1.$$

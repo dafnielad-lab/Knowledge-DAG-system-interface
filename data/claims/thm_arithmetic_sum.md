@@ -8,4 +8,6 @@ date_added: '2026-06-27T16:13:44.126315Z'
 schema_version: 1
 ---
 
-**סכום סדרה חשבונית:** $S_n = a_1 + a_2 + \cdots + a_n = \frac{n \cdot (a_1 + a_n)}{2} = \frac{n \cdot (2 a_1 + (n-1) d)}{2}$.
+**סכום סדרה חשבונית:**
+
+$$S_n = a_1 + a_2 + \cdots + a_n = \frac{n \, (a_1 + a_n)}{2} = \frac{n \, \big(2 a_1 + (n-1) d\big)}{2}.$$

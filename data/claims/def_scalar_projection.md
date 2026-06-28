@@ -8,4 +8,8 @@ date_added: '2026-06-27T18:26:22.743198Z'
 schema_version: 1
 ---
 
-**היטל סקלרי:** $\text{comp}_{\vec{v}} \vec{u} := \frac{\vec{u} \cdot \vec{v}}{|\vec{v}|} = |\vec{u}| \cos\theta$ — הגודל של ההיטל הוקטורי.
+**היטל סקלרי:**
+
+$$\text{comp}_{\vec{v}} \vec{u} := \frac{\vec{u} \cdot \vec{v}}{|\vec{v}|} = |\vec{u}| \cos\theta.$$
+
+הגודל (הסקלרי) של ההיטל הוקטורי של $\vec u$ על $\vec v$.
