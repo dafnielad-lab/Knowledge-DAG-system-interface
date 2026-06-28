@@ -75,7 +75,7 @@ def apply(output_path: Path) -> None:
 
     # ── 2. Proof patches (overwrites) ──
     n_patches_applied = 0
-    for p in result["proof_patches"]:
+    for p in result.get("proof_patches", []):
         proof_obj = Proof(
             id=p["proof_id"],
             claim_id=p["claim_id"],
