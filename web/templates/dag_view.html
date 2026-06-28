@@ -82,31 +82,29 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
         tile: true,
         tilingPaddingVertical: 40,
         tilingPaddingHorizontal: 40,
-        // ── Anti-overlap tuning (the main knobs the user is iterating on) ──
-        // Repulsion is the dominant force preventing label boxes from
-        // colliding. Bumped 8000 → 30000 because at 693 nodes with
-        // 140px-wide labels, weaker repulsion lets force equilibria settle
-        // with boxes still touching.
-        nodeRepulsion: 30000,
-        // Longer ideal edges spread sibling branches apart and give the
-        // anti-overlap pass room to breathe.
-        idealEdgeLength: 200,
+        // ── Anti-overlap tuning ──
+        // Scaled UP again after the graph grew from 693 → 859 nodes:
+        // the prior settings left dense areas overlapping. Larger graph
+        // needs proportionally more repulsion + longer edges.
+        // Repulsion: dominant force keeping label boxes apart. At ~860
+        // nodes with 140px-wide labels, we need ~50k to maintain visible
+        // gaps in the bushy central areas (calculus, trig).
+        nodeRepulsion: 50000,
+        // Longer ideal edges spread sibling branches further out.
+        idealEdgeLength: 260,
         // Lower elasticity → edges pull less, repulsion wins.
-        edgeElasticity: 0.15,
-        // Weaker gravity → the graph can grow outward instead of clumping
-        // toward the canvas center.
-        gravity: 0.05,
-        gravityRange: 3.8,
+        edgeElasticity: 0.12,
+        // Weaker gravity → graph grows outward instead of clumping center.
+        gravity: 0.03,
+        gravityRange: 4.0,
         gravityCompound: 1.0,
         gravityRangeCompound: 1.5,
-        // More iterations = the cooling phase actually converges to a
-        // non-overlapping layout on a graph this dense.
-        numIter: 4000,
-        // Minimum spacing the post-cool tiling step enforces. 75 wasn't
-        // enough for 140px-wide labels; 160 leaves clear gaps between boxes.
-        nodeSeparation: 160,
-        // Step size for the initial force layout — smaller = more stable
-        // convergence at the cost of speed.
+        // More iterations to actually converge on the larger graph.
+        numIter: 5500,
+        // Minimum spacing post-cool tiling enforces. Bumped from 160 → 200
+        // to handle the densest clusters.
+        nodeSeparation: 200,
+        // Step-by-step force application (more stable convergence).
         step: 'all',
       },
       style: [
