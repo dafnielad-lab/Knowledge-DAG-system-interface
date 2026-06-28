@@ -99,7 +99,10 @@ _REF_IN_CODE = re.compile(
     r"<code>((?:def_|thm_|ax_|lem_|prf_|axc_)[a-z0-9_]+)</code>"
 )
 _BARE_REF_PATTERN = re.compile(
-    r"(?<![\w./-])((?:def_|thm_|ax_|lem_|prf_|axc_)[a-z0-9_]+)(?![\w./-])"
+    # Word-boundary on both sides only. Excluding `-`/`.`/`/` here would block
+    # Hebrew constructions like "ו-thm_x" or "ב-def_y", which are the most
+    # common way refs appear in proof bodies.
+    r"(?<!\w)((?:def_|thm_|ax_|lem_|prf_|axc_)[a-z0-9_]+)(?!\w)"
 )
 _HTML_TAG = re.compile(r"(<[^>]+>)")
 _SKIP_ELEMENTS = {"code", "pre", "a", "button", "script", "style", "kbd", "samp"}
