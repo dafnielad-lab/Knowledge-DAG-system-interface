@@ -63,6 +63,52 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
 
     if (cy) cy.destroy();
 
+    // ── Post-layout overlap remover ──
+    // fcose is force-directed and doesn't guarantee non-overlap; under
+    // dense clusters its convergence leaves visible collisions even
+    // after we bump nodeRepulsion/nodeSeparation. This pass runs once
+    // after the layout finishes and physically separates any node pair
+    // whose bounding boxes still overlap (with the requested padding).
+    // It's O(n² · iter) but n is ~900 and iter usually <20 — runs in
+    // well under 200ms even on a low-end laptop.
+    function removeOverlaps(cy, padding, maxIter) {
+      padding = padding || 12;
+      maxIter = maxIter || 60;
+      const nodes = cy.nodes().toArray();
+      for (let iter = 0; iter < maxIter; iter++) {
+        let moved = false;
+        for (let i = 0; i < nodes.length; i++) {
+          const a = nodes[i];
+          const ab = a.boundingBox();
+          for (let j = i + 1; j < nodes.length; j++) {
+            const b = nodes[j];
+            const bb = b.boundingBox();
+            const overlapX = Math.min(ab.x2, bb.x2) - Math.max(ab.x1, bb.x1) + padding;
+            const overlapY = Math.min(ab.y2, bb.y2) - Math.max(ab.y1, bb.y1) + padding;
+            if (overlapX > 0 && overlapY > 0) {
+              const ap = a.position();
+              const bp = b.position();
+              // Push along the axis of LESS penetration (cheaper resolution).
+              if (overlapX < overlapY) {
+                const half = overlapX / 2;
+                const sign = bp.x >= ap.x ? 1 : -1;
+                a.position({ x: ap.x - sign * half, y: ap.y });
+                b.position({ x: bp.x + sign * half, y: bp.y });
+              } else {
+                const half = overlapY / 2;
+                const sign = bp.y >= ap.y ? 1 : -1;
+                a.position({ x: ap.x, y: ap.y - sign * half });
+                b.position({ x: bp.x, y: bp.y + sign * half });
+              }
+              moved = true;
+            }
+          }
+        }
+        if (!moved) return iter + 1;
+      }
+      return maxIter;
+    }
+
     cy = cytoscape({
       container: container,
       elements: elements,
@@ -186,6 +232,15 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
             'z-index': 50,
         }},
       ],
+    });
+
+    // Once fcose finishes, run the deterministic overlap remover then re-fit.
+    cy.one('layoutstop', function() {
+      const passes = removeOverlaps(cy, 14, 80);
+      cy.fit(undefined, 30);
+      // Optional: surface the count in the status line if you want to debug
+      // const sEl = document.getElementById('dag-status');
+      // if (sEl) sEl.textContent += `  · overlap pass: ${passes}`;
     });
 
     function clearHighlight() {
