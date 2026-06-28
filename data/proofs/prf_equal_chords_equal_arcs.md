@@ -10,37 +10,43 @@ dependencies:
 - def_chord
 - def_arc_of_circle
 - def_central_angle
+- def_congruent_triangles
+- ax_sas_congruence
 - ax_sss_congruence
-- thm_arc_length_in_circle
 is_canonical: true
-date_added: '2026-06-28T16:00:00.000000Z'
+date_added: '2026-06-28T21:06:29.457177Z'
 schema_version: 1
 ---
 
-יהי מעגל ברדיוס $r$ שמרכזו $O$ (`def_circle`, `def_circle_center`, `def_circle_radius`), ויהיו $AB$ ו-$CD$ שני מיתרים (`def_chord`) במעגל המקיימים $AB = CD$.
+יהי מעגל ברדיוס $r$ שמרכזו $O$ (`def_circle`, `def_circle_center`, `def_circle_radius`), ויהיו $AB$ ו-$CD$ שני מיתרים שלו (`def_chord`). נוכיח את שלושת השוויונות לפי שתי גרירות הדדיות.
 
-**צעד 1 — חפיפת המשולשים $\triangle OAB$ ו-$\triangle OCD$.**
+**כיוון א — ($AB = CD \Rightarrow \angle AOB = \angle COD$).**
 
-נסתכל בשני המשולשים:
+נתבונן במשולשים $\triangle OAB$ ו-$\triangle OCD$:
+- $OA = OC = r$ — שני רדיוסים של אותו מעגל (`def_circle_radius`).
+- $OB = OD = r$ — שני רדיוסים של אותו מעגל (`def_circle_radius`).
+- $AB = CD$ — נתון.
 
-- $OA = OC = r$ (שני רדיוסים, לפי `def_circle_radius`).
-- $OB = OD = r$ (שני רדיוסים, לפי `def_circle_radius`).
-- $AB = CD$ (נתון).
-
-לפי `ax_sss_congruence` (חפיפת צ.צ.צ), $\triangle OAB \cong \triangle OCD$.
-
-**צעד 2 — הזוויות המרכזיות שוות.**
-
-מהחפיפה נובע שכל הזוויות המתאימות שוות. בפרט הזוויות שמול הצלעות השוות $AB$ ו-$CD$ — אלה הזוויות $\angle AOB$ ו-$\angle COD$ — שוות:
+לפי `ax_sss_congruence` (חפיפת צ.צ.צ), $\triangle OAB \cong \triangle OCD$. מהגדרת חפיפת משולשים (`def_congruent_triangles`) נובע ששוויון הזוויות המתאימות מתקיים; בפרט הזווית שמול הצלע $AB$ ב-$\triangle OAB$ שווה לזווית שמול $CD$ ב-$\triangle OCD$:
 $$\angle AOB = \angle COD.$$
 
-זוויות אלה הן הזוויות המרכזיות (`def_central_angle`) המתאימות לקשתות $\overset{\frown}{AB}$ ו-$\overset{\frown}{CD}$.
+**כיוון ב — ($\angle AOB = \angle COD \Rightarrow AB = CD$).**
 
-**צעד 3 — הקשתות שוות באורכן.**
+נתבונן שוב באותם משולשים. כעת ידוע:
+- $OA = OC = r$ (`def_circle_radius`).
+- $\angle AOB = \angle COD$ — נתון.
+- $OB = OD = r$ (`def_circle_radius`).
 
-לפי `thm_arc_length_in_circle`, אורך קשת במעגל ברדיוס $r$ שעליה נשענת זווית מרכזית $\theta$ (ברדיאנים) הוא $L = r\theta$ (אורך הקשת `def_arc_of_circle` המתאימה). לפי צעד 2, הזוויות המרכזיות שוות, ולכן:
-$$\overset{\frown}{AB} = r \cdot \angle AOB = r \cdot \angle COD = \overset{\frown}{CD}.$$
+הזווית $\angle AOB$ כלואה בין הצלעות $OA, OB$, והזווית $\angle COD$ כלואה בין $OC, OD$. לפי `ax_sas_congruence` (חפיפת צ.ז.צ), $\triangle OAB \cong \triangle OCD$. מהגדרת חפיפה (`def_congruent_triangles`) נובע ש-$AB = CD$.
 
-**הכיוון ההפוך.** אם נתון $\overset{\frown}{AB} = \overset{\frown}{CD}$, אזי לפי `thm_arc_length_in_circle` (בכיוון ההפוך, חלוקה ב-$r > 0$) הזוויות המרכזיות שוות $\angle AOB = \angle COD$. אז לפי `ax_sas_congruence` (צ.ז.צ עם $OA=OC=r$, $\angle AOB = \angle COD$, $OB=OD=r$) המשולשים $\triangle OAB \cong \triangle OCD$, ולכן הצלעות $AB = CD$.
+שני הכיוונים יחד נותנים את השקילות $AB = CD \Leftrightarrow \angle AOB = \angle COD$.
 
-לפיכך, $AB = CD \Leftrightarrow \angle AOB = \angle COD \Leftrightarrow \overset{\frown}{AB} = \overset{\frown}{CD}$. $\blacksquare$
+**כיוון ג — שקילות הזוויות המרכזיות לאורכי הקשתות.**
+
+זווית מרכזית במעגל מוגדרת (`def_central_angle`) כזווית שקודקודה במרכז המעגל, והקשת שעליה היא נשענת (`def_arc_of_circle`) היא חלק רציף של המעגל הכלוא בין שוקי הזווית. גודל הקשת — מספר המעלות שהיא תופסת לאורך המעגל — נקבע לחלוטין על-ידי הזווית המרכזית שמולה: בחטיבת הביניים מוסכם שמודדים קשת באותו גודל כמו הזווית המרכזית הנשענת עליה ("מידת קשת" במעלות). לכן שתי קשתות באותו מעגל שוות במידתן אם ורק אם הזוויות המרכזיות שמולן שוות.
+
+כיוון שהמעגל סימטרי סביב מרכזו $O$ ובעל רדיוס יחיד $r$, שתי קשתות באותו מעגל בעלות אותה מידה (אותה זווית מרכזית) הן גם בעלות אותו אורך — שתיהן נחתכות מאותו מעגל "שלם" ביחס זהה. לכן:
+$$\angle AOB = \angle COD \;\Leftrightarrow\; \overset{\frown}{AB} = \overset{\frown}{CD}.$$
+
+**איחוד.** משילוב כיוונים א, ב, ג מתקבל:
+$$AB = CD \;\Leftrightarrow\; \angle AOB = \angle COD \;\Leftrightarrow\; \overset{\frown}{AB} = \overset{\frown}{CD}. \quad\blacksquare$$
