@@ -24,4 +24,4 @@ $= 0 \cdot a$ (מאיבר נגדי)
 
 $= 0$ (משפט אפס בכפל).
 
-מכאן $(-1) \cdot a + a = 0$, ולכן $(-1) \cdot a = -a$ (יחידות הנגדי, או הוספת $-a$ ב-$thm\_cancel\_add$). $\blacksquare$
+מכאן $(-1) \cdot a + a = 0$, ולכן $(-1) \cdot a = -a$ (יחידות הנגדי, או הוספת $-a$ ב-thm_cancel_add). $\blacksquare$

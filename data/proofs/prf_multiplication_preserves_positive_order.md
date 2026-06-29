@@ -14,7 +14,7 @@ schema_version: 1
 
 נניח את שלוש ההנחות: $a, b, c \in \mathbb{R}$, $c > 0$, ו-$a < b$.
 
-לפי האקסיומה $ax\_positive\_multiplication\_preserves\_order$ (שימור סדר בכפל בחיובי), נתון לנו במפורש: אם $a < b$ ו-$c > 0$, אז $a \cdot c < b \cdot c$.
+לפי האקסיומה ax_positive_multiplication_preserves_order (שימור סדר בכפל בחיובי), נתון לנו במפורש: אם $a < b$ ו-$c > 0$, אז $a \cdot c < b \cdot c$.
 
 ההנחות שלנו תואמות בדיוק את הנחות האקסיומה: $a < b$ מתקיים (הנחה שנייה), $c > 0$ מתקיים (הנחה ראשונה). לכן מסקנת האקסיומה תופסת ישירות, ואנו מקבלים $a \cdot c < b \cdot c$.
 
