@@ -323,9 +323,12 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
         if (!pathState.first) {
           resetClasses();
           pathState.first = node;
-          cy.elements().addClass('dimmed');
-          node.removeClass('dimmed').addClass('path-endpoint');
-          setModeHint('נבחרה טענת מוצא. עכשיו לחץ על הטענה השנייה.');
+          // Mark the source distinctly but do NOT dim other nodes — we
+          // want every other claim to remain easily clickable for the
+          // second pick. (Dimming everything visually obscures the
+          // targets and made the second pick frustrating.)
+          node.addClass('path-endpoint');
+          setModeHint('נבחרה טענת מוצא (במסגרת זהובה). עכשיו לחץ על הטענה השנייה.');
           return;
         }
         if (pathState.first.id() === node.id()) {
@@ -425,8 +428,13 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
     cy.on('tap', 'node', function(evt) { applyHighlight(evt.target); });
 
     // Background tap = clear highlight.
+    // EXCEPTION: in path2 mode while waiting for the second pick, ignore
+    // background taps — otherwise a small miss next to a dimmed node would
+    // reset pathState and the user would have to start over.
     cy.on('tap', function(evt) {
-      if (evt.target === cy) clearHighlight();
+      if (evt.target !== cy) return;
+      if (getMode() === 'path2' && pathState.first) return;
+      clearHighlight();
     });
 
     // Double tap on a node = open the claim page (moved off single tap so
