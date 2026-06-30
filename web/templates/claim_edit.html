@@ -62,4 +62,15 @@
     <a href="{% if mode == 'edit' %}/claims/{{ claim.id }}{% else %}/{% endif %}" class="btn secondary">ביטול</a>
   </div>
 </form>
+
+{% if mode == 'edit' and claim %}
+  {# Delete in its own form so the save button can't trigger it. The
+     server endpoint also removes any proofs that target this claim. #}
+  <form method="post" action="/ui/claims/{{ claim.id }}/delete" class="form danger-zone"
+        onsubmit="return confirm('האם למחוק את הטענה ' + {{ claim.id | tojson }} + '?\n\nהפעולה אינה הפיכה. ההוכחות שמתבססות על טענה זו עלולות להיוותר ללא בסיס.');">
+    <h4>אזור מסוכן</h4>
+    <p class="hint">מחיקת הטענה היא בלתי-הפיכה. אם יש לטענה הוכחה — היא תימחק גם היא.</p>
+    <button type="submit" class="btn danger">מחק טענה</button>
+  </form>
+{% endif %}
 {% endblock %}
