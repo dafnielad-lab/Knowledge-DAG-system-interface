@@ -22,7 +22,10 @@ env/
 Thumbs.db
 
 # App-specific
-index.db
+# index.db itself IS committed — Render's free tier has ephemeral filesystem,
+# so without a pre-built index, every cold start rebuilds it from ~1400 MD
+# files (~1.5s). The DB is fully derivable from data/ so it's safe to ship.
+# The journal/WAL files below are runtime-only and must stay ignored.
 index.db-journal
 index.db-shm
 index.db-wal
