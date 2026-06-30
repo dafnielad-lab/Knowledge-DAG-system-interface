@@ -355,14 +355,20 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
           pathState.first = null;
           return;
         }
+        // "Connecting set" = the two endpoints + intersection nodes.
+        // A connecting edge = both endpoints are in the connecting set.
+        // This filters out the wide fan-out of edges from intersection
+        // nodes into the rest of each subgraph (e.g. an axiom that's
+        // also used by 100 unrelated theorems).
+        const connSet = intersection.nodes().union(a).union(b);
+        const connIds = {};
+        connSet.forEach(n => { connIds[n.id()] = true; });
+        // Visible region = full subgraphs of both. Everything outside dimmed.
         const visible = ga.union(gb);
         cy.elements().difference(visible).addClass('dimmed');
         intersection.nodes().addClass('hl-node-in');
-        intersection.edges().addClass('hl-edge');
-        const interIds = {};
-        intersection.nodes().forEach(n => { interIds[n.id()] = true; });
         visible.edges().forEach(e => {
-          if (interIds[e.source().id()] || interIds[e.target().id()]) {
+          if (connIds[e.source().id()] && connIds[e.target().id()]) {
             e.addClass('hl-edge');
           }
         });
