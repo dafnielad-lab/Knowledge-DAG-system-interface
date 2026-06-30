@@ -314,11 +314,15 @@
     { selector: 'node:hover', style: { 'border-width': 3 }},
   ];
 
-  function renderGraph(depthUp, depthDown) {
+  function renderGraph(ancestorsDepth, descendantsDepth) {
     if (activeCy) { activeCy.destroy(); activeCy = null; }
     if (tooltip) { tooltip.remove(); tooltip = null; }
     container.innerHTML = '';
-    fetch(`/api/claims/${encodeURIComponent(FOCUS_ID)}/neighborhood?depth_down=${depthDown}&depth_up=${depthUp}`)
+    // API semantics: depth_down = how deep to chase DEPENDENCIES (ancestors,
+    // toward axioms), depth_up = how deep to chase DEPENDENTS (descendants,
+    // toward leaves). The Hebrew UI labels match those mathematical roles,
+    // but the parameter names are inverted relative to the visual top/bottom.
+    fetch(`/api/claims/${encodeURIComponent(FOCUS_ID)}/neighborhood?depth_down=${ancestorsDepth}&depth_up=${descendantsDepth}`)
       .then(r => r.json())
       .then(data => {
         if (!data.nodes || data.nodes.length === 0) {
@@ -371,9 +375,15 @@
   }
 
   function currentDepths() {
-    const up   = Math.max(0, Math.min(10, parseInt(depthUpInput.value, 10)   || 2));
-    const down = Math.max(0, Math.min(10, parseInt(depthDownInput.value, 10) || 2));
-    return [up, down];
+    // Don't use `|| 2` here — that'd map a typed 0 to 2 (0 is falsy in JS).
+    // Use Number.isFinite check so only invalid input falls back.
+    function clamp(v) {
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) ? Math.max(0, Math.min(10, n)) : 2;
+    }
+    const ancestors   = clamp(depthUpInput.value);   // labeled "דורות אבות"
+    const descendants = clamp(depthDownInput.value); // labeled "דורות בנים"
+    return [ancestors, descendants];
   }
 
   if (applyBtn) {
