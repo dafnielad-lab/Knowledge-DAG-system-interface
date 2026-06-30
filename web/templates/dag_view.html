@@ -17,6 +17,13 @@
   </div>
 </form>
 
+{# ── Search box (autocomplete over loaded nodes) ── #}
+<div class="dag-search-bar">
+  <input type="search" id="dag-search-input" autocomplete="off"
+         placeholder="חיפוש טענה לפי שם…" aria-label="חיפוש טענה">
+  <div id="dag-search-dropdown" class="dag-search-dropdown" hidden></div>
+</div>
+
 {# ── Highlight-mode + pathfinder controls ── #}
 <div class="dag-mode-bar">
   <span class="dag-mode-label">לחיצה מדגישה:</span>
@@ -52,6 +59,9 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
   const statusEl  = document.getElementById('dag-status');
   let cy = null;
   let tooltip = null;
+  // Search index: rebuilt from /api/claims/dag/full response on each load.
+  // Each entry: {id, name, kind, nameLower, idLower}
+  let searchIndex = [];
 
   function buildQueryString() {
     const params = new URLSearchParams();
@@ -555,6 +565,14 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
       await new Promise(resolve => setTimeout(resolve, 0));
       renderDag(data);
       statusEl.textContent = `מציג ${data.nodes.length} טענות · ${data.edges.length} קשרים`;
+      // Build search index over the currently-visible nodes.
+      searchIndex = data.nodes.map(n => ({
+        id: n.id,
+        name: n.name || n.id,
+        kind: n.kind,
+        nameLower: (n.name || '').toLowerCase(),
+        idLower: n.id.toLowerCase(),
+      }));
     } catch (e) {
       statusEl.textContent = 'שגיאה: ' + e;
     }
@@ -594,6 +612,104 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
       cy.resize();
       cy.fit(undefined, 30);
     }
+  });
+
+  // ── Search box with autocomplete ──
+  // Filter the loaded nodes by Hebrew name (substring, case-insensitive) and
+  // by id substring. Show the top matches in a dropdown. Picking one centers
+  // the graph on the chosen node and pulses it briefly.
+  const searchInput    = document.getElementById('dag-search-input');
+  const searchDropdown = document.getElementById('dag-search-dropdown');
+  const SEARCH_LIMIT   = 12;
+  let searchActiveIdx = -1;
+  let searchResults   = [];
+
+  function rankSearch(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const exactName = [], prefixName = [], containsName = [], idMatch = [];
+    for (const item of searchIndex) {
+      const ni = item.nameLower.indexOf(q);
+      if (item.nameLower === q) exactName.push(item);
+      else if (ni === 0) prefixName.push(item);
+      else if (ni > 0) containsName.push(item);
+      else if (item.idLower.indexOf(q) >= 0) idMatch.push(item);
+    }
+    return [...exactName, ...prefixName, ...containsName, ...idMatch].slice(0, SEARCH_LIMIT);
+  }
+
+  function renderSearchDropdown() {
+    if (!searchResults.length) {
+      searchDropdown.hidden = true;
+      searchDropdown.innerHTML = '';
+      return;
+    }
+    searchDropdown.hidden = false;
+    searchDropdown.innerHTML = searchResults.map((item, i) => `
+      <div class="dag-search-item ${i === searchActiveIdx ? 'active' : ''}"
+           data-id="${item.id}" data-idx="${i}">
+        <span class="ds-name">${item.name}</span>
+        <span class="ds-meta">${item.kind} · ${item.id}</span>
+      </div>
+    `).join('');
+  }
+
+  function focusNode(id) {
+    if (!cy) return;
+    const node = cy.getElementById(id);
+    if (!node || node.empty()) return;
+    // Center + zoom, then briefly mark with the focus class so it stands out.
+    cy.animate({
+      center: { eles: node },
+      zoom: Math.max(cy.zoom(), 1.0),
+      duration: 350,
+    });
+    // Trigger the current highlight mode on the chosen node (same as if
+    // the user had clicked it directly).
+    applyHighlight(node);
+  }
+
+  searchInput.addEventListener('input', () => {
+    searchResults = rankSearch(searchInput.value);
+    searchActiveIdx = searchResults.length ? 0 : -1;
+    renderSearchDropdown();
+  });
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!searchResults.length) return;
+      searchActiveIdx = (searchActiveIdx + 1) % searchResults.length;
+      renderSearchDropdown();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!searchResults.length) return;
+      searchActiveIdx = (searchActiveIdx - 1 + searchResults.length) % searchResults.length;
+      renderSearchDropdown();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (searchActiveIdx >= 0 && searchActiveIdx < searchResults.length) {
+        focusNode(searchResults[searchActiveIdx].id);
+        searchDropdown.hidden = true;
+      }
+    } else if (e.key === 'Escape') {
+      searchDropdown.hidden = true;
+      searchInput.blur();
+    }
+  });
+  searchDropdown.addEventListener('mousedown', (e) => {
+    // mousedown (not click) so the input doesn't lose focus mid-pick
+    const item = e.target.closest('.dag-search-item');
+    if (!item) return;
+    e.preventDefault();
+    focusNode(item.dataset.id);
+    searchDropdown.hidden = true;
+  });
+  searchInput.addEventListener('blur', () => {
+    // Delay so a click on a dropdown item can fire first
+    setTimeout(() => { searchDropdown.hidden = true; }, 120);
+  });
+  searchInput.addEventListener('focus', () => {
+    if (searchResults.length) searchDropdown.hidden = false;
   });
 
   // Initial load — render everything; user picks filters from there.
