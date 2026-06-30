@@ -100,7 +100,17 @@
   </section>
 
   <section class="section">
-    <h4>גרף ההקשרים <span style="color: var(--ink-faint); font-weight: 400; font-size: 13px;">· שכנים בעומק 2 · גלגלת לזום · גרור להזיז · לחיצה על צומת = ניווט</span></h4>
+    <h4>גרף ההקשרים <span style="color: var(--ink-faint); font-weight: 400; font-size: 13px;">· גלגלת לזום · גרור להזיז · לחיצה על צומת = ניווט</span></h4>
+    <div class="dag-depth-controls">
+      <label>דורות אבות:
+        <input type="number" id="depth-up" min="0" max="10" value="2" step="1">
+      </label>
+      <label>דורות בנים:
+        <input type="number" id="depth-down" min="0" max="10" value="2" step="1">
+      </label>
+      <button type="button" class="btn secondary" id="depth-apply">החל</button>
+      <span class="depth-hint">המקסימום הגיוני: 4-5 (יותר עלול להציף את הגרף).</span>
+    </div>
     <div id="dag-graph" class="dag-graph"></div>
     <div class="dag-legend">
       <span><span class="dot k-axiom"></span> אקסיומה</span>
@@ -264,91 +274,124 @@
   const container = document.getElementById('dag-graph');
   if (!container || typeof cytoscape === 'undefined') return;
 
-  fetch(`/api/claims/${encodeURIComponent(FOCUS_ID)}/neighborhood?depth_down=2&depth_up=2`)
-    .then(r => r.json())
-    .then(data => {
-      if (!data.nodes || data.nodes.length === 0) return;
+  const depthUpInput   = document.getElementById('depth-up');
+  const depthDownInput = document.getElementById('depth-down');
+  const applyBtn       = document.getElementById('depth-apply');
 
-      // API returns edges as (dependent -> dependency). For the visual we want
-      // axioms on top and the derived flow downward, so we swap source/target —
-      // the arrow now reads "X feeds into Y" instead of "X depends on Y".
-      const elements = [
-        ...data.nodes.map(n => ({
-          data: { id: n.id, label: n.name, kind: n.kind, status: n.status, is_focus: n.is_focus },
-          classes: `k-${n.kind} ${n.is_focus ? 'is-focus' : ''}`,
-        })),
-        ...data.edges.map(e => ({ data: { source: e.target, target: e.source } })),
-      ];
+  let activeCy = null;
+  let tooltip  = null;
 
-      const cy = cytoscape({
-        container: container,
-        elements: elements,
-        wheelSensitivity: 0.2,
-        layout: {
-          name: 'dagre', rankDir: 'TB',
-          nodeSep: 30, rankSep: 60, edgeSep: 10,
-        },
-        style: [
-          { selector: 'node', style: {
-              'label': 'data(label)',
-              'text-valign': 'center', 'text-halign': 'center',
-              'text-wrap': 'wrap', 'text-max-width': '160px',
-              'font-family': 'Heebo, sans-serif', 'font-size': '12px',
-              'shape': 'round-rectangle',
-              'background-color': '#ffffff',
-              'border-width': 1.5, 'border-color': '#b8b3a6',
-              'color': '#1c1c1c',
-              'padding': '10px',
-              'width': 'label', 'height': 'label',
-              'border-style': 'solid',
-          }},
-          { selector: 'node.k-axiom',      style: { 'border-color': '#4a6b3a', 'background-color': '#f4f9f0' }},
-          { selector: 'node.k-definition', style: { 'border-color': '#3a5b75', 'background-color': '#eff5f9' }},
-          { selector: 'node.k-theorem',    style: { 'border-color': '#6b2c2c', 'background-color': '#fbf5f0' }},
-          { selector: 'node.k-lemma',      style: { 'border-color': '#9a6b2c', 'background-color': '#faf3e8' }},
-          { selector: 'node.k-relation',   style: { 'border-color': '#6b3a6b', 'background-color': '#f7f0f7' }},
-          { selector: 'node.is-focus', style: {
-              'border-width': 3, 'background-color': '#f0ead6',
-              'font-weight': 700,
-          }},
-          { selector: 'edge', style: {
-              'width': 1.5,
-              'line-color': '#c7c1b3',
-              'target-arrow-color': '#c7c1b3',
-              'target-arrow-shape': 'triangle',
-              'curve-style': 'bezier',
-          }},
-          { selector: 'node:hover', style: { 'border-width': 3 }},
-        ],
-      });
+  const STYLE = [
+    { selector: 'node', style: {
+        'label': 'data(label)',
+        'text-valign': 'center', 'text-halign': 'center',
+        'text-wrap': 'wrap', 'text-max-width': '160px',
+        'font-family': 'Heebo, sans-serif', 'font-size': '12px',
+        'shape': 'round-rectangle',
+        'background-color': '#ffffff',
+        'border-width': 1.5, 'border-color': '#b8b3a6',
+        'color': '#1c1c1c',
+        'padding': '10px',
+        'width': 'label', 'height': 'label',
+        'border-style': 'solid',
+    }},
+    { selector: 'node.k-axiom',      style: { 'border-color': '#4a6b3a', 'background-color': '#f4f9f0' }},
+    { selector: 'node.k-definition', style: { 'border-color': '#3a5b75', 'background-color': '#eff5f9' }},
+    { selector: 'node.k-theorem',    style: { 'border-color': '#6b2c2c', 'background-color': '#fbf5f0' }},
+    { selector: 'node.k-lemma',      style: { 'border-color': '#9a6b2c', 'background-color': '#faf3e8' }},
+    { selector: 'node.k-relation',   style: { 'border-color': '#6b3a6b', 'background-color': '#f7f0f7' }},
+    { selector: 'node.is-focus', style: {
+        'border-width': 3, 'background-color': '#f0ead6',
+        'font-weight': 700,
+    }},
+    { selector: 'edge', style: {
+        'width': 1.5,
+        'line-color': '#c7c1b3',
+        'target-arrow-color': '#c7c1b3',
+        'target-arrow-shape': 'triangle',
+        'curve-style': 'bezier',
+    }},
+    { selector: 'node:hover', style: { 'border-width': 3 }},
+  ];
 
-      cy.on('tap', 'node', function(evt) {
-        const id = evt.target.id();
-        if (id) window.location.href = '/claims/' + encodeURIComponent(id);
-      });
-
-      let tooltip = null;
-      cy.on('mouseover', 'node', function(evt) {
-        if (tooltip) tooltip.remove();
-        const node = evt.target;
-        tooltip = document.createElement('div');
-        tooltip.className = 'dag-tooltip';
-        tooltip.textContent = node.id();
-        document.body.appendChild(tooltip);
-      });
-      cy.on('mousemove', 'node', function(evt) {
-        if (tooltip && evt.originalEvent) {
-          tooltip.style.left = (evt.originalEvent.pageX + 12) + 'px';
-          tooltip.style.top  = (evt.originalEvent.pageY + 12) + 'px';
+  function renderGraph(depthUp, depthDown) {
+    if (activeCy) { activeCy.destroy(); activeCy = null; }
+    if (tooltip) { tooltip.remove(); tooltip = null; }
+    container.innerHTML = '';
+    fetch(`/api/claims/${encodeURIComponent(FOCUS_ID)}/neighborhood?depth_down=${depthDown}&depth_up=${depthUp}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.nodes || data.nodes.length === 0) {
+          container.innerHTML = '<p style="padding: 20px; color: var(--ink-faint);">אין צמתים בעומק הזה.</p>';
+          return;
         }
+        // API returns edges as (dependent -> dependency). Swap for visual so
+        // axioms sit on top and the flow points downward.
+        const elements = [
+          ...data.nodes.map(n => ({
+            data: { id: n.id, label: n.name, kind: n.kind, status: n.status, is_focus: n.is_focus },
+            classes: `k-${n.kind} ${n.is_focus ? 'is-focus' : ''}`,
+          })),
+          ...data.edges.map(e => ({ data: { source: e.target, target: e.source } })),
+        ];
+        const cy = cytoscape({
+          container: container,
+          elements: elements,
+          wheelSensitivity: 0.2,
+          layout: { name: 'dagre', rankDir: 'TB', nodeSep: 30, rankSep: 60, edgeSep: 10 },
+          style: STYLE,
+        });
+        activeCy = cy;
+
+        cy.on('tap', 'node', function(evt) {
+          const id = evt.target.id();
+          if (id) window.location.href = '/claims/' + encodeURIComponent(id);
+        });
+        cy.on('mouseover', 'node', function(evt) {
+          if (tooltip) tooltip.remove();
+          const node = evt.target;
+          tooltip = document.createElement('div');
+          tooltip.className = 'dag-tooltip';
+          tooltip.textContent = node.id();
+          document.body.appendChild(tooltip);
+        });
+        cy.on('mousemove', 'node', function(evt) {
+          if (tooltip && evt.originalEvent) {
+            tooltip.style.left = (evt.originalEvent.pageX + 12) + 'px';
+            tooltip.style.top  = (evt.originalEvent.pageY + 12) + 'px';
+          }
+        });
+        cy.on('mouseout', 'node', function() {
+          if (tooltip) { tooltip.remove(); tooltip = null; }
+        });
+      })
+      .catch(err => {
+        container.innerHTML = '<p style="padding: 20px; color: var(--ink-faint);">לא הצלחנו לטעון את הגרף: ' + err + '</p>';
       });
-      cy.on('mouseout', 'node', function() {
-        if (tooltip) { tooltip.remove(); tooltip = null; }
-      });
-    })
-    .catch(err => {
-      container.innerHTML = '<p style="padding: 20px; color: var(--ink-faint);">לא הצלחנו לטעון את הגרף: ' + err + '</p>';
+  }
+
+  function currentDepths() {
+    const up   = Math.max(0, Math.min(10, parseInt(depthUpInput.value, 10)   || 2));
+    const down = Math.max(0, Math.min(10, parseInt(depthDownInput.value, 10) || 2));
+    return [up, down];
+  }
+
+  if (applyBtn) {
+    applyBtn.addEventListener('click', () => {
+      const [up, down] = currentDepths();
+      renderGraph(up, down);
     });
+  }
+  // Enter key inside either input also triggers a re-render.
+  [depthUpInput, depthDownInput].forEach(inp => {
+    if (!inp) return;
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); applyBtn.click(); }
+    });
+  });
+
+  // First render with the default depths.
+  renderGraph(...currentDepths());
 })();
 </script>
 {% endblock %}

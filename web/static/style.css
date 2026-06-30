@@ -1023,6 +1023,74 @@ p { margin: 0 0 14px; color: var(--ink-soft); }
   min-height: 500px;
 }
 
+/* Mode bar above the full DAG — highlight modes + pathfinder */
+.dag-mode-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 10px 0 8px 0;
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  flex-wrap: wrap;
+}
+.dag-mode-bar .dag-mode-label {
+  font-weight: 600;
+  color: var(--ink);
+}
+.dag-mode-bar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+.dag-mode-bar input[type="radio"] {
+  margin: 0;
+}
+.dag-mode-bar .dag-mode-hint {
+  margin-right: auto;
+  color: var(--ink-faint);
+  font-size: 12px;
+  font-style: italic;
+}
+.dag-mode-bar .btn {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* Depth controls above the per-claim mini-DAG */
+.dag-depth-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 10px 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  flex-wrap: wrap;
+}
+.dag-depth-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.dag-depth-controls input[type="number"] {
+  width: 56px;
+  padding: 5px 6px;
+  font-size: 13px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  text-align: center;
+  direction: ltr;
+}
+.dag-depth-controls .depth-hint {
+  color: var(--ink-faint);
+  font-size: 12px;
+  margin-right: auto;
+}
+
 /* Fullscreen mode (Fullscreen API toggle on the graph container) — let
    the canvas fill the entire viewport, no border, no margin. The browser
    handles the actual fullscreen; we just style the element when it's the
