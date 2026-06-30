@@ -294,32 +294,18 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
     }
 
     // ── Pathfinder ──
-    // Find every node that lies on SOME directed path between A and B
-    // (in either direction). Computed as a set intersection of reachability
-    // closures — cheap O(n+m).
-    function reachable(start, direction) {
-      const seen = new Set([start.id()]);
-      const queue = [start];
-      while (queue.length) {
-        const n = queue.shift();
-        const next = direction === 'out' ? n.outgoers('node') : n.incomers('node');
-        next.forEach(x => {
-          if (!seen.has(x.id())) { seen.add(x.id()); queue.push(x); }
-        });
-      }
-      return seen;
-    }
-    function nodesBetween(a, b) {
-      // Direction A→B: nodes reachable from A going outward AND reachable from B going inward
-      const fromA_out = reachable(a, 'out');
-      const toB_in    = reachable(b, 'in');
-      const fwd = new Set([...fromA_out].filter(id => toB_in.has(id)));
-      // Direction B→A: symmetric
-      const fromB_out = reachable(b, 'out');
-      const toA_in    = reachable(a, 'in');
-      const bwd = new Set([...fromB_out].filter(id => toA_in.has(id)));
-      const union = new Set([...fwd, ...bwd]);
-      return union;
+    // The "connection" between two claims is the intersection of their
+    // full transitive neighborhoods (ancestors + descendants + self, in
+    // both directions). Nodes in that intersection are exactly the
+    // mathematical structures that ANY proof chain from A to B must pass
+    // through — common foundations they both rest on, shared intermediate
+    // theorems, or common downstream consequences.
+    //
+    // If the intersection is empty (just A or just B), the two claims
+    // live in disconnected components of the underlying graph — no
+    // mathematical connection exists, and we show nothing.
+    function fullGraph(node) {
+      return collectTransitive(node, 'in').union(collectTransitive(node, 'out'));
     }
 
     let pathState = { first: null };
@@ -366,22 +352,47 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
           updateModeHint();
         } else {
           const a = pathState.first, b = node;
-          const ids = nodesBetween(a, b);
-          if (ids.size === 0) {
-            setModeHint(`אין נתיב מקשר בין שתי הטענות.`);
-            pathState.first = null;
-            return;
+          const ga = fullGraph(a);
+          const gb = fullGraph(b);
+          const intersection = ga.intersection(gb);
+          // Non-trivial connection means at least one node besides A and B
+          // themselves appears in BOTH subgraphs.
+          const sharedNodes = intersection.nodes()
+            .difference(a).difference(b);
+          if (sharedNodes.length === 0) {
+            // A and B may be directly connected (A→B edge) but share no other
+            // node — still a connection. Or they may be in different components.
+            const directEdge = a.edgesWith(b).length > 0;
+            if (!directEdge) {
+              setModeHint('אין חיבור בין שתי הטענות בגרף.');
+              // Per spec: when no connection, don't show anything.
+              clearHighlight();
+              pathState.first = null;
+              return;
+            }
           }
-          const onPath = cy.elements().filter(el => {
-            if (el.isNode()) return ids.has(el.id());
-            return ids.has(el.source().id()) && ids.has(el.target().id());
+          // Visible region = full subgraphs of both. Everything outside dimmed.
+          const visible = ga.union(gb);
+          cy.elements().difference(visible).addClass('dimmed');
+          // Connecting nodes (intersection) get the highlight color.
+          intersection.nodes().addClass('hl-node-in');
+          intersection.edges().addClass('hl-edge');
+          // Plus: highlight edges anywhere in ga or gb that touch an intersection
+          // node — these are the "paths leading in" from A or B to the shared
+          // region. Cheap filter.
+          const interIds = new Set(intersection.nodes().map(n => n.id()));
+          visible.edges().forEach(e => {
+            if (interIds.has(e.source().id()) || interIds.has(e.target().id())) {
+              e.addClass('hl-edge');
+            }
           });
-          cy.elements().difference(onPath).addClass('dimmed');
-          onPath.nodes().addClass('hl-node-in');
-          onPath.edges().addClass('hl-edge');
+          // The two endpoints get the distinctive endpoint style.
           a.removeClass('hl-node-in dimmed').addClass('path-endpoint');
           b.removeClass('hl-node-in dimmed').addClass('path-endpoint');
-          setModeHint(`נמצאו ${ids.size} צמתים על נתיבים בין שתי הטענות.`);
+          const sharedCount = sharedNodes.length;
+          setModeHint(sharedCount > 0
+            ? `נמצאו ${sharedCount} צמתים משותפים המחברים בין שתי הטענות.`
+            : `הטענות מחוברות ישירות בקשת אחת.`);
           pathState.first = null;
         }
       }
