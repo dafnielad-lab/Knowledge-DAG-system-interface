@@ -300,18 +300,86 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
     }
 
     // ── Pathfinder ──
-    // The "connection" between two claims is the intersection of their
-    // full transitive neighborhoods (ancestors + descendants + self, in
-    // both directions). Nodes in that intersection are exactly the
-    // mathematical structures that ANY proof chain from A to B must pass
-    // through — common foundations they both rest on, shared intermediate
-    // theorems, or common downstream consequences.
-    //
-    // If the intersection is empty (just A or just B), the two claims
-    // live in disconnected components of the underlying graph — no
-    // mathematical connection exists, and we show nothing.
-    function fullGraph(node) {
-      return collectTransitive(node, 'in').union(collectTransitive(node, 'out'));
+    // Returns the set of nodes/edges that lie on SOME simple undirected
+    // A-B path through the dependency graph. The semantics matches the
+    // user's mental model:
+    //   1. Expand outward from A in all directions (ancestors + descendants
+    //      recursively, treating edges as undirected).
+    //   2. Expand outward from B the same way.
+    //   3. The candidate "connecting region" = nodes reachable from BOTH.
+    //   4. Within that region, iteratively prune any non-{A,B} node whose
+    //      degree dropped to 1 — these are dead-end branches that lead
+    //      somewhere AWAY from B (or A), not toward it.
+    //   5. What remains is exactly the set of nodes on some A-B path.
+    // Returns null if A and B are in disconnected components.
+    function nodesOnPaths(a, b) {
+      const aid = a.id(), bid = b.id();
+      if (aid === bid) {
+        return { nodes: cy.collection().merge(a), edges: cy.collection() };
+      }
+      // Step 1+2: undirected reachability from each endpoint
+      function reachUndirected(start) {
+        const seen = new Set([start.id()]);
+        const queue = [start];
+        while (queue.length) {
+          const n = queue.shift();
+          n.connectedEdges().forEach(e => {
+            const other = e.source().id() === n.id() ? e.target() : e.source();
+            if (!seen.has(other.id())) {
+              seen.add(other.id());
+              queue.push(other);
+            }
+          });
+        }
+        return seen;
+      }
+      const reachA = reachUndirected(a);
+      if (!reachA.has(bid)) return null;
+      const reachB = reachUndirected(b);
+      // Step 3: intersection
+      const inter = new Set();
+      reachA.forEach(id => { if (reachB.has(id)) inter.add(id); });
+      // Build adjacency restricted to inter, plus degree counter
+      const deg = {};
+      const adj = {};
+      inter.forEach(id => { deg[id] = 0; adj[id] = []; });
+      cy.edges().forEach(e => {
+        const s = e.source().id(), t = e.target().id();
+        if (inter.has(s) && inter.has(t)) {
+          deg[s]++; deg[t]++;
+          adj[s].push(t);
+          adj[t].push(s);
+        }
+      });
+      // Step 4: iterative leaf-pruning (preserve A and B)
+      const queue = [];
+      inter.forEach(id => {
+        if (id !== aid && id !== bid && deg[id] <= 1) queue.push(id);
+      });
+      while (queue.length) {
+        const id = queue.shift();
+        if (!inter.has(id)) continue;
+        inter.delete(id);
+        adj[id].forEach(neighbor => {
+          if (inter.has(neighbor)) {
+            deg[neighbor]--;
+            if (neighbor !== aid && neighbor !== bid && deg[neighbor] <= 1) {
+              queue.push(neighbor);
+            }
+          }
+        });
+      }
+      // Step 5: build result collections
+      if (!inter.has(aid) || !inter.has(bid)) return null;
+      const nodes = cy.collection();
+      inter.forEach(id => nodes.merge(cy.getElementById(id)));
+      const edges = cy.collection();
+      cy.edges().forEach(e => {
+        if (inter.has(e.source().id()) && inter.has(e.target().id())) {
+          edges.merge(e);
+        }
+      });
+      return { nodes, edges };
     }
 
     let pathState = { first: null };
@@ -345,38 +413,23 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
         const a = pathState.first;
         const b = node;
         resetClasses();
-        const ga = fullGraph(a);
-        const gb = fullGraph(b);
-        const intersection = ga.intersection(gb);
-        const sharedNodes = intersection.nodes().not(a).not(b);
-        const directEdge  = a.edgesWith(b).length > 0;
-        if (sharedNodes.length === 0 && !directEdge) {
+        const result = nodesOnPaths(a, b);
+        if (!result) {
           setModeHint('אין חיבור בין שתי הטענות בגרף.');
           pathState.first = null;
           return;
         }
-        // "Connecting set" = the two endpoints + intersection nodes.
-        // A connecting edge = both endpoints are in the connecting set.
-        // This filters out the wide fan-out of edges from intersection
-        // nodes into the rest of each subgraph (e.g. an axiom that's
-        // also used by 100 unrelated theorems).
-        const connSet = intersection.nodes().union(a).union(b);
-        const connIds = {};
-        connSet.forEach(n => { connIds[n.id()] = true; });
-        // Visible region = full subgraphs of both. Everything outside dimmed.
-        const visible = ga.union(gb);
-        cy.elements().difference(visible).addClass('dimmed');
-        intersection.nodes().addClass('hl-node-in');
-        visible.edges().forEach(e => {
-          if (connIds[e.source().id()] && connIds[e.target().id()]) {
-            e.addClass('hl-edge');
-          }
-        });
+        // Dim everything outside the pruned A-B connecting region.
+        cy.elements().difference(result.nodes).difference(result.edges).addClass('dimmed');
+        // The connecting structure is fully highlighted.
+        result.nodes.not(a).not(b).addClass('hl-node-in');
+        result.edges.addClass('hl-edge');
         a.removeClass('hl-node-in dimmed').addClass('path-endpoint');
         b.removeClass('hl-node-in dimmed').addClass('path-endpoint');
-        setModeHint(sharedNodes.length > 0
-          ? `נמצאו ${sharedNodes.length} צמתים משותפים המחברים בין שתי הטענות.`
-          : 'הטענות מחוברות ישירות בקשת אחת.');
+        const middle = result.nodes.length - 2; // exclude the two endpoints
+        setModeHint(middle > 0
+          ? `נמצאו ${middle} צמתי-ביניים על מסלולים בין שתי הטענות.`
+          : 'הטענות מחוברות ישירות בלי צמתי-ביניים.');
         pathState.first = null;
         return;
       }
