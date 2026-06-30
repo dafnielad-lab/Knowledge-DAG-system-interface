@@ -415,6 +415,12 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
         resetClasses();
         const result = nodesOnPaths(a, b);
         if (!result) {
+          // No connection found — keep both endpoints highlighted in
+          // gold so the user sees the two claims they selected, but
+          // don't dim anything or draw any path. The message tells them
+          // explicitly that no chain links the two.
+          a.addClass('path-endpoint');
+          b.addClass('path-endpoint');
           setModeHint('אין חיבור בין שתי הטענות בגרף.');
           pathState.first = null;
           return;
