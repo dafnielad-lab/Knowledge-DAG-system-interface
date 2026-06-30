@@ -310,8 +310,63 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
 
     let pathState = { first: null };
 
+    // Drop class state but preserve pathState (used by path2 between clicks).
+    function resetClasses() {
+      cy.elements().removeClass('focus-node hl-node-in hl-node-out hl-edge dimmed path-endpoint');
+    }
+
     function applyHighlight(node) {
       const mode = getMode();
+      if (mode === 'path2') {
+        // Two-click flow — DO NOT call clearHighlight() here because it
+        // resets pathState.first to null. Manage classes manually.
+        if (!pathState.first) {
+          resetClasses();
+          pathState.first = node;
+          cy.elements().addClass('dimmed');
+          node.removeClass('dimmed').addClass('path-endpoint');
+          setModeHint('נבחרה טענת מוצא. עכשיו לחץ על הטענה השנייה.');
+          return;
+        }
+        if (pathState.first.id() === node.id()) {
+          // Same node clicked twice → cancel
+          clearHighlight();
+          return;
+        }
+        const a = pathState.first;
+        const b = node;
+        resetClasses();
+        const ga = fullGraph(a);
+        const gb = fullGraph(b);
+        const intersection = ga.intersection(gb);
+        const sharedNodes = intersection.nodes().not(a).not(b);
+        const directEdge  = a.edgesWith(b).length > 0;
+        if (sharedNodes.length === 0 && !directEdge) {
+          setModeHint('אין חיבור בין שתי הטענות בגרף.');
+          pathState.first = null;
+          return;
+        }
+        const visible = ga.union(gb);
+        cy.elements().difference(visible).addClass('dimmed');
+        intersection.nodes().addClass('hl-node-in');
+        intersection.edges().addClass('hl-edge');
+        const interIds = {};
+        intersection.nodes().forEach(n => { interIds[n.id()] = true; });
+        visible.edges().forEach(e => {
+          if (interIds[e.source().id()] || interIds[e.target().id()]) {
+            e.addClass('hl-edge');
+          }
+        });
+        a.removeClass('hl-node-in dimmed').addClass('path-endpoint');
+        b.removeClass('hl-node-in dimmed').addClass('path-endpoint');
+        setModeHint(sharedNodes.length > 0
+          ? `נמצאו ${sharedNodes.length} צמתים משותפים המחברים בין שתי הטענות.`
+          : 'הטענות מחוברות ישירות בקשת אחת.');
+        pathState.first = null;
+        return;
+      }
+
+      // All other modes: fresh start each click.
       clearHighlight();
       if (mode === 'gen1') {
         const incomingEdges = node.incomers('edge');
@@ -328,73 +383,17 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
         outNeighbors.addClass('hl-node-out');
         node.addClass('focus-node');
       } else if (mode === 'ancestors') {
-        // Entire subgraph of things this claim is built on.
         const subgraph = collectTransitive(node, 'in');
         cy.elements().difference(subgraph).addClass('dimmed');
-        subgraph.nodes().difference(node).addClass('hl-node-in');
+        subgraph.nodes().not(node).addClass('hl-node-in');
         subgraph.edges().addClass('hl-edge');
         node.addClass('focus-node');
       } else if (mode === 'descendants') {
-        // Entire subgraph of things that build on this claim.
         const subgraph = collectTransitive(node, 'out');
         cy.elements().difference(subgraph).addClass('dimmed');
-        subgraph.nodes().difference(node).addClass('hl-node-out');
+        subgraph.nodes().not(node).addClass('hl-node-out');
         subgraph.edges().addClass('hl-edge');
         node.addClass('focus-node');
-      } else if (mode === 'path2') {
-        if (!pathState.first) {
-          pathState.first = node;
-          cy.elements().addClass('dimmed');
-          node.removeClass('dimmed').addClass('path-endpoint');
-          setModeHint(`נבחרה טענת מוצא. עכשיו לחץ על הטענה השנייה.`);
-        } else if (pathState.first.id() === node.id()) {
-          pathState.first = null;
-          updateModeHint();
-        } else {
-          const a = pathState.first, b = node;
-          const ga = fullGraph(a);
-          const gb = fullGraph(b);
-          const intersection = ga.intersection(gb);
-          // Non-trivial connection means at least one node besides A and B
-          // themselves appears in BOTH subgraphs.
-          const sharedNodes = intersection.nodes()
-            .difference(a).difference(b);
-          if (sharedNodes.length === 0) {
-            // A and B may be directly connected (A→B edge) but share no other
-            // node — still a connection. Or they may be in different components.
-            const directEdge = a.edgesWith(b).length > 0;
-            if (!directEdge) {
-              setModeHint('אין חיבור בין שתי הטענות בגרף.');
-              // Per spec: when no connection, don't show anything.
-              clearHighlight();
-              pathState.first = null;
-              return;
-            }
-          }
-          // Visible region = full subgraphs of both. Everything outside dimmed.
-          const visible = ga.union(gb);
-          cy.elements().difference(visible).addClass('dimmed');
-          // Connecting nodes (intersection) get the highlight color.
-          intersection.nodes().addClass('hl-node-in');
-          intersection.edges().addClass('hl-edge');
-          // Plus: highlight edges anywhere in ga or gb that touch an intersection
-          // node — these are the "paths leading in" from A or B to the shared
-          // region. Cheap filter.
-          const interIds = new Set(intersection.nodes().map(n => n.id()));
-          visible.edges().forEach(e => {
-            if (interIds.has(e.source().id()) || interIds.has(e.target().id())) {
-              e.addClass('hl-edge');
-            }
-          });
-          // The two endpoints get the distinctive endpoint style.
-          a.removeClass('hl-node-in dimmed').addClass('path-endpoint');
-          b.removeClass('hl-node-in dimmed').addClass('path-endpoint');
-          const sharedCount = sharedNodes.length;
-          setModeHint(sharedCount > 0
-            ? `נמצאו ${sharedCount} צמתים משותפים המחברים בין שתי הטענות.`
-            : `הטענות מחוברות ישירות בקשת אחת.`);
-          pathState.first = null;
-        }
       }
     }
 
