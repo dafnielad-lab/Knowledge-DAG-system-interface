@@ -196,6 +196,12 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
             'target-arrow-color': '#d3cec0',
             'target-arrow-shape': 'triangle',
             'curve-style': 'bezier', 'arrow-scale': 0.7,
+            // Edges are visually informative but should NEVER intercept
+            // a click — otherwise a click landing on a line falls through
+            // to the background handler and resets the selection state.
+            // 'no' makes the edge invisible to hit-testing so the pointer
+            // passes through to the node beneath (or the background).
+            'events': 'no',
         }},
         { selector: 'node:hover', style: { 'border-width': 3 }},
 
