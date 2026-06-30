@@ -289,6 +289,21 @@ header.top .wrap {
 }
 .topnav a:hover { color: var(--accent); background: var(--accent-tint); }
 
+/* Rebuild-index form sits in the topnav and looks like another nav link
+   (the form wrapper is just there to POST, not for visual structure). */
+.topnav-form { display: inline-block; margin: 0; }
+.topnav .topnav-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 3px;
+}
+.topnav .topnav-btn:hover { color: var(--accent); background: var(--accent-tint); }
+
 main.content { padding-bottom: 96px; min-height: 60vh; }
 
 /* ─── Headings ─── */

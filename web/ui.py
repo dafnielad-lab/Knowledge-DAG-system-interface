@@ -15,7 +15,7 @@ from core import dag
 from core.models import Claim, Course, Proof, Status
 from storage import files, index
 
-from api.deps import get_data_dir, get_db
+from api.deps import get_data_dir, get_db, get_db_path
 
 
 router = APIRouter(prefix="/ui", tags=["ui"])
@@ -202,6 +202,23 @@ def proofs_delete(proof_id: str,
     index.remove_proof(db, proof_id)
     index.touch_mtime(db, data_dir)
     return _redirect(f"/claims/{claim_id}")
+
+
+# ────── Maintenance ──────
+
+@router.post("/rebuild_index")
+def rebuild_index_action(
+    next: str = Form("/"),
+    data_dir=Depends(get_data_dir),
+    db_path=Depends(get_db_path),
+):
+    """Force-rebuild the SQLite index from the file store. Safe to call any time.
+
+    Useful when claim/proof MD files were edited outside the app (direct edit,
+    git pull, etc.) and the index might be stale.
+    """
+    index.rebuild_index(data_dir, db_path)
+    return _redirect(next)
 
 
 def _validate_proof(proof: Proof, db) -> Optional[str]:

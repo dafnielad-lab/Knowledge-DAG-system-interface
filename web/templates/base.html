@@ -37,6 +37,13 @@
         <a href="/claims/new">+ טענה</a>
         <a href="/proofs/new">+ הוכחה</a>
         <a href="/courses">קורסים</a>
+        {# Force-rebuild of the SQLite index from the file store. Safe to
+           click any time; takes ~1-2s on a graph of ~900 claims. #}
+        <form method="post" action="/ui/rebuild_index" class="topnav-form"
+              onsubmit="return confirm('לרענן את האינדקס מתוך הקבצים? לוקח שנייה-שתיים.');">
+          <input type="hidden" name="next" value="{{ request.url.path if request else '/' }}">
+          <button type="submit" class="topnav-btn" title="בנייה מחדש של האינדקס מתוך הקבצים — שימושי אחרי עריכה ידנית">⟳ רענן אינדקס</button>
+        </form>
       </nav>
     </div>
   </header>
