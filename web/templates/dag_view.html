@@ -14,6 +14,7 @@
     <button type="button" class="btn secondary" id="reset-btn">איפוס</button>
     <button type="button" class="btn secondary" id="fit-btn">התאם לחלון</button>
     <button type="button" class="btn secondary" id="fullscreen-btn">מסך מלא ⛶</button>
+    <button type="button" class="btn secondary" id="reset-layout-btn" title="החזרת הסידור האוטומטי (מבטל את הסידור הידני ששמרת)">אפס סידור</button>
   </div>
 </form>
 
@@ -279,13 +280,20 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
     });
 
     // Once fcose finishes, run the deterministic overlap remover then re-fit.
+    // If the user has previously saved a manual arrangement, apply it AFTER
+    // the auto-pass — that way any nodes added since the save get placed
+    // reasonably by fcose, while the manually-arranged nodes go back to
+    // their remembered spots.
     cy.one('layoutstop', function() {
-      const passes = removeOverlaps(cy, 14, 80);
+      removeOverlaps(cy, 14, 80);
+      applySavedPositions();
       cy.fit(undefined, 30);
-      // Optional: surface the count in the status line if you want to debug
-      // const sEl = document.getElementById('dag-status');
-      // if (sEl) sEl.textContent += `  · overlap pass: ${passes}`;
     });
+
+    // ── Persist user-arranged layout in localStorage ──
+    // Every time the user finishes dragging any node(s), snapshot every
+    // node position so ALL manual adjustments accumulate across sessions.
+    cy.on('dragfree', 'node', () => savePositions());
 
     function clearHighlight() {
       cy.elements().removeClass('focus-node hl-node-in hl-node-out hl-edge dimmed path-endpoint path-node');
@@ -711,6 +719,63 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
   searchInput.addEventListener('focus', () => {
     if (searchResults.length) searchDropdown.hidden = false;
   });
+
+  // ── Persistent layout (localStorage) ──
+  // Users can drag nodes into their preferred arrangement; we snapshot
+  // positions on every dragfree event and restore them on next load.
+  // Reset button wipes the snapshot and forces fresh fcose+overlap layout.
+  const LAYOUT_STORAGE_KEY = 'kdag:dag-layout:v1';
+
+  function savePositions() {
+    if (!cy) return;
+    try {
+      const positions = {};
+      cy.nodes().forEach(n => {
+        const p = n.position();
+        positions[n.id()] = { x: p.x, y: p.y };
+      });
+      localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(positions));
+    } catch (e) {
+      // localStorage full or unavailable — silently ignore
+      console && console.warn && console.warn('Layout save failed:', e);
+    }
+  }
+
+  function applySavedPositions() {
+    if (!cy) return;
+    let saved = null;
+    try {
+      const raw = localStorage.getItem(LAYOUT_STORAGE_KEY);
+      if (raw) saved = JSON.parse(raw);
+    } catch (e) { return; }
+    if (!saved) return;
+    let n = 0;
+    cy.nodes().forEach(node => {
+      const p = saved[node.id()];
+      if (p && typeof p.x === 'number' && typeof p.y === 'number') {
+        node.position({ x: p.x, y: p.y });
+        n++;
+      }
+    });
+    if (n > 0) {
+      const s = document.getElementById('dag-status');
+      if (s) s.textContent += `  · הוחל סידור שמור על ${n} צמתים`;
+    }
+  }
+
+  const resetLayoutBtn = document.getElementById('reset-layout-btn');
+  if (resetLayoutBtn) {
+    resetLayoutBtn.addEventListener('click', () => {
+      const has = !!localStorage.getItem(LAYOUT_STORAGE_KEY);
+      if (!has) {
+        alert('אין סידור שמור לאפס.');
+        return;
+      }
+      if (!confirm('לאפס את סידור הגרף לצורתו האוטומטית?\nהסידור הידני שלך יימחק.')) return;
+      localStorage.removeItem(LAYOUT_STORAGE_KEY);
+      loadAndRender();
+    });
+  }
 
   // Initial load — render everything; user picks filters from there.
   // Auto-label-mode handles the readability for large initial graphs.

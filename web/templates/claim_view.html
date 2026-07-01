@@ -110,6 +110,8 @@
       </label>
       <button type="button" class="btn secondary" id="depth-apply">החל</button>
       <button type="button" class="btn secondary" id="claim-fs-btn">מסך מלא ⛶</button>
+      <button type="button" class="btn secondary" id="claim-reset-layout-btn"
+              title="החזרת הסידור האוטומטי (מבטל סידור ידני ששמרת לטענה זו)">אפס סידור</button>
       <span class="depth-hint">המקסימום הגיוני: 4-5 (יותר עלול להציף את הגרף).</span>
     </div>
     <div id="dag-graph" class="dag-graph"></div>
@@ -348,6 +350,15 @@
         });
         activeCy = cy;
 
+        // Apply any manually-saved arrangement AFTER dagre has settled,
+        // then re-fit. Nodes without a saved position keep the dagre spot.
+        cy.one('layoutstop', function() {
+          applySavedPositions();
+          cy.fit(undefined, 30);
+        });
+        // Snapshot positions after any user drag.
+        cy.on('dragfree', 'node', () => savePositions());
+
         cy.on('tap', 'node', function(evt) {
           const id = evt.target.id();
           if (id) window.location.href = '/claims/' + encodeURIComponent(id);
@@ -400,6 +411,53 @@
       if (e.key === 'Enter') { e.preventDefault(); applyBtn.click(); }
     });
   });
+
+  // ── Persistent layout (localStorage) ──
+  // Same pattern as the full DAG page but keyed per-claim, so each
+  // theorem's neighborhood remembers its own arrangement.
+  const CLAIM_LAYOUT_KEY = `kdag:claim-layout:v1:${FOCUS_ID}`;
+
+  function savePositions() {
+    if (!activeCy) return;
+    try {
+      const positions = {};
+      activeCy.nodes().forEach(n => {
+        const p = n.position();
+        positions[n.id()] = { x: p.x, y: p.y };
+      });
+      localStorage.setItem(CLAIM_LAYOUT_KEY, JSON.stringify(positions));
+    } catch (e) {}
+  }
+
+  function applySavedPositions() {
+    if (!activeCy) return;
+    let saved = null;
+    try {
+      const raw = localStorage.getItem(CLAIM_LAYOUT_KEY);
+      if (raw) saved = JSON.parse(raw);
+    } catch (e) { return; }
+    if (!saved) return;
+    activeCy.nodes().forEach(node => {
+      const p = saved[node.id()];
+      if (p && typeof p.x === 'number' && typeof p.y === 'number') {
+        node.position({ x: p.x, y: p.y });
+      }
+    });
+  }
+
+  const claimResetLayoutBtn = document.getElementById('claim-reset-layout-btn');
+  if (claimResetLayoutBtn) {
+    claimResetLayoutBtn.addEventListener('click', () => {
+      const has = !!localStorage.getItem(CLAIM_LAYOUT_KEY);
+      if (!has) {
+        alert('אין סידור שמור לטענה זו לאפס.');
+        return;
+      }
+      if (!confirm('לאפס את סידור הגרף של הטענה?\nהסידור הידני שלך יימחק.')) return;
+      localStorage.removeItem(CLAIM_LAYOUT_KEY);
+      renderGraph(...currentDepths());
+    });
+  }
 
   // ── Fullscreen toggle for the claim mini-DAG ──
   // Uses the same .dag-graph.is-fullscreen CSS as the full DAG page — the
