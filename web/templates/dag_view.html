@@ -527,10 +527,14 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
     });
 
     // Double tap on a node = open the claim page (moved off single tap so
-    // the highlight is actually visible).
+    // the highlight is actually visible). CRITICAL: save the current layout
+    // BEFORE navigating away — this is the accidental-click case the user
+    // most complained about.
     cy.on('dbltap', 'node', function(evt) {
       const id = evt.target.id();
-      if (id) window.location.href = '/claims/' + encodeURIComponent(id);
+      if (!id) return;
+      savePositions();
+      window.location.href = '/claims/' + encodeURIComponent(id);
     });
     cy.on('mouseover', 'node', function(evt) {
       if (tooltip) tooltip.remove();
@@ -776,6 +780,19 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
       loadAndRender();
     });
   }
+
+  // Belt-and-suspenders: save on every page-unload event, including refresh,
+  // tab close, browser navigation, and any accidental link click. This is
+  // the last-chance save if dragfree somehow didn't fire (e.g. user was
+  // still mid-drag when they released outside the viewport).
+  window.addEventListener('beforeunload', () => {
+    try { savePositions(); } catch (e) {}
+  });
+  // pagehide is more reliable than beforeunload on some browsers (Safari,
+  // mobile) — belt-belt-and-suspenders.
+  window.addEventListener('pagehide', () => {
+    try { savePositions(); } catch (e) {}
+  });
 
   // Initial load — render everything; user picks filters from there.
   // Auto-label-mode handles the readability for large initial graphs.

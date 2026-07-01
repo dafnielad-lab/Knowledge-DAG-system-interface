@@ -361,7 +361,11 @@
 
         cy.on('tap', 'node', function(evt) {
           const id = evt.target.id();
-          if (id) window.location.href = '/claims/' + encodeURIComponent(id);
+          if (!id) return;
+          // Save the current arrangement before navigating away — otherwise
+          // a mid-drag/accidental tap loses all the manual arrangement work.
+          savePositions();
+          window.location.href = '/claims/' + encodeURIComponent(id);
         });
         cy.on('mouseover', 'node', function(evt) {
           if (tooltip) tooltip.remove();
@@ -458,6 +462,15 @@
       renderGraph(...currentDepths());
     });
   }
+
+  // Belt-and-suspenders: save on unload/pagehide so an accidental navigation
+  // (double-tap on a node, back button, refresh) always snapshots first.
+  window.addEventListener('beforeunload', () => {
+    try { savePositions(); } catch (e) {}
+  });
+  window.addEventListener('pagehide', () => {
+    try { savePositions(); } catch (e) {}
+  });
 
   // ── Fullscreen toggle for the claim mini-DAG ──
   // Uses the same .dag-graph.is-fullscreen CSS as the full DAG page — the
