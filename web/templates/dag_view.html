@@ -291,9 +291,25 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
     });
 
     // ── Persist user-arranged layout in localStorage ──
-    // Every time the user finishes dragging any node(s), snapshot every
-    // node position so ALL manual adjustments accumulate across sessions.
+    // Defense-in-depth against 'accidental click lost my arrangement':
+    //   dragfree — every completed drag
+    //   drag     — mid-drag throttled (every 400ms) — so a session
+    //              being actively arranged is snapshotted continuously
+    //              even if the final release event misfires
+    //   grab     — when user starts touching a node — snapshots the
+    //              current state before any move happens
+    // Combined with the beforeunload/pagehide/dbltap saves added below,
+    // there is no window where an arrangement can be lost silently.
+    let lastMidDragSave = 0;
+    cy.on('drag', 'node', () => {
+      const now = Date.now();
+      if (now - lastMidDragSave > 400) {
+        lastMidDragSave = now;
+        savePositions();
+      }
+    });
     cy.on('dragfree', 'node', () => savePositions());
+    cy.on('grab', 'node', () => savePositions());
 
     function clearHighlight() {
       cy.elements().removeClass('focus-node hl-node-in hl-node-out hl-edge dimmed path-endpoint path-node');
@@ -730,6 +746,24 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
   // Reset button wipes the snapshot and forces fresh fcose+overlap layout.
   const LAYOUT_STORAGE_KEY = 'kdag:dag-layout:v1';
 
+  function showToast(msg, color) {
+    let t = document.getElementById('layout-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'layout-toast';
+      t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);' +
+        'background:#333;color:white;padding:10px 20px;border-radius:6px;' +
+        'font-size:14px;z-index:99999;opacity:0;transition:opacity 0.25s;' +
+        'pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.background = color || '#4a6b3a';
+    t.style.opacity = '1';
+    clearTimeout(t._h);
+    t._h = setTimeout(() => { t.style.opacity = '0'; }, 1200);
+  }
+
   function savePositions() {
     if (!cy) return;
     try {
@@ -738,9 +772,17 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
         const p = n.position();
         positions[n.id()] = { x: p.x, y: p.y };
       });
-      localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(positions));
+      const json = JSON.stringify(positions);
+      localStorage.setItem(LAYOUT_STORAGE_KEY, json);
+      // Verify write by reading back — some browsers silently drop writes
+      const readBack = localStorage.getItem(LAYOUT_STORAGE_KEY);
+      if (readBack !== json) {
+        showToast('שמירת סידור נכשלה (חזרה מחסן לא תואם)', '#9a3a3a');
+      } else {
+        showToast(`נשמר: ${cy.nodes().length} צמתים`, '#4a6b3a');
+      }
     } catch (e) {
-      // localStorage full or unavailable — silently ignore
+      showToast('שמירת סידור נכשלה: ' + e.message, '#9a3a3a');
       console && console.warn && console.warn('Layout save failed:', e);
     }
   }
@@ -762,6 +804,7 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
       }
     });
     if (n > 0) {
+      showToast(`הוחל סידור שמור על ${n} צמתים`, '#3a5b75');
       const s = document.getElementById('dag-status');
       if (s) s.textContent += `  · הוחל סידור שמור על ${n} צמתים`;
     }
