@@ -109,6 +109,7 @@
         <input type="number" id="depth-down" min="0" max="10" value="2" step="1">
       </label>
       <button type="button" class="btn secondary" id="depth-apply">החל</button>
+      <button type="button" class="btn secondary" id="claim-fs-btn">מסך מלא ⛶</button>
       <span class="depth-hint">המקסימום הגיוני: 4-5 (יותר עלול להציף את הגרף).</span>
     </div>
     <div id="dag-graph" class="dag-graph"></div>
@@ -399,6 +400,30 @@
       if (e.key === 'Enter') { e.preventDefault(); applyBtn.click(); }
     });
   });
+
+  // ── Fullscreen toggle for the claim mini-DAG ──
+  // Uses the same .dag-graph.is-fullscreen CSS as the full DAG page — the
+  // .dag-graph container fills the viewport and cytoscape is asked to
+  // re-fit whenever the size changes.
+  const claimFsBtn = document.getElementById('claim-fs-btn');
+  if (claimFsBtn) {
+    claimFsBtn.addEventListener('click', () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else if (container.requestFullscreen) {
+        container.requestFullscreen();
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const inFs = document.fullscreenElement === container;
+      container.classList.toggle('is-fullscreen', inFs);
+      claimFsBtn.textContent = inFs ? 'יציאה ממסך מלא ⛶' : 'מסך מלא ⛶';
+      if (activeCy) {
+        activeCy.resize();
+        activeCy.fit(undefined, 30);
+      }
+    });
+  }
 
   // First render with the default depths.
   renderGraph(...currentDepths());
