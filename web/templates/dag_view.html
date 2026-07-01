@@ -311,6 +311,30 @@ if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
     cy.on('dragfree', 'node', () => savePositions());
     cy.on('grab', 'node', () => savePositions());
 
+    // ULTIMATE FALLBACK: periodic save every 1s, independent of any
+    // cytoscape event. If for some reason drag/dragfree/grab don't fire
+    // (browser quirk, cytoscape version bug, focused elsewhere), this
+    // guarantees the current arrangement is written to localStorage
+    // regardless. Cleared on cy.destroy() to avoid stacking timers.
+    if (window._kdagSaveTimer) clearInterval(window._kdagSaveTimer);
+    let lastSavedJson = '';
+    window._kdagSaveTimer = setInterval(() => {
+      if (!cy || cy.destroyed()) return;
+      try {
+        const positions = {};
+        cy.nodes().forEach(n => {
+          const p = n.position();
+          positions[n.id()] = { x: p.x, y: p.y };
+        });
+        const json = JSON.stringify(positions);
+        // Only write if positions changed since last periodic save.
+        if (json !== lastSavedJson) {
+          localStorage.setItem(LAYOUT_STORAGE_KEY, json);
+          lastSavedJson = json;
+        }
+      } catch (e) {}
+    }, 1000);
+
     function clearHighlight() {
       cy.elements().removeClass('focus-node hl-node-in hl-node-out hl-edge dimmed path-endpoint path-node');
       pathState = { first: null };
