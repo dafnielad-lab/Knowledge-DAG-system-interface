@@ -29,6 +29,11 @@ echo Starting Knowledge DAG on http://localhost:%PORT%
 echo Press Ctrl+C to stop.
 echo.
 
+:: Schedule the browser to open a few seconds AFTER uvicorn starts (so it has
+:: time to bind the port). PowerShell handles the delay+launch in the
+:: background with no visible window; the batch keeps running.
+start "" /b powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 3; Start-Process 'http://localhost:%PORT%/'"
+
 python -m uvicorn app:app --host 127.0.0.1 --port %PORT%
 
 pause
