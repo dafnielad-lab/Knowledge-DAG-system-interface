@@ -352,12 +352,52 @@
 
         // Apply any manually-saved arrangement AFTER dagre has settled,
         // then re-fit. Nodes without a saved position keep the dagre spot.
+        //
+        // IMPORTANT: dagre is a SYNCHRONOUS layout — it might complete
+        // DURING cytoscape() construction. If that happens, layoutstop
+        // fires before cy.one() attaches the listener, so the callback
+        // never runs and saved positions never apply. To guard against
+        // both timings (sync-fast-dagre and async-late-dagre), also fall
+        // back to a microtask-deferred apply.
         cy.one('layoutstop', function() {
           applySavedPositions();
           cy.fit(undefined, 30);
         });
-        // Snapshot positions after any user drag.
+        // Belt: if layoutstop already fired before we listened, apply
+        // positions on the next tick anyway. cy.fit re-runs safely.
+        setTimeout(function() {
+          applySavedPositions();
+          cy.fit(undefined, 30);
+        }, 0);
+        // ── Multi-trigger save (all six mechanisms mirroring dag_view.html)
+        let lastMidDragSave = 0;
+        cy.on('drag', 'node', () => {
+          const now = Date.now();
+          if (now - lastMidDragSave > 400) {
+            lastMidDragSave = now;
+            savePositions();
+          }
+        });
         cy.on('dragfree', 'node', () => savePositions());
+        cy.on('grab', 'node', () => savePositions());
+        // Ultimate fallback: periodic save every 1s regardless of events.
+        if (window._kdagClaimSaveTimer) clearInterval(window._kdagClaimSaveTimer);
+        let lastSavedJson = '';
+        window._kdagClaimSaveTimer = setInterval(() => {
+          if (!activeCy || activeCy.destroyed()) return;
+          try {
+            const positions = {};
+            activeCy.nodes().forEach(n => {
+              const p = n.position();
+              positions[n.id()] = { x: p.x, y: p.y };
+            });
+            const json = JSON.stringify(positions);
+            if (json !== lastSavedJson) {
+              localStorage.setItem(CLAIM_LAYOUT_KEY, json);
+              lastSavedJson = json;
+            }
+          } catch (e) {}
+        }, 1000);
 
         cy.on('tap', 'node', function(evt) {
           const id = evt.target.id();
@@ -421,6 +461,24 @@
   // theorem's neighborhood remembers its own arrangement.
   const CLAIM_LAYOUT_KEY = `kdag:claim-layout:v1:${FOCUS_ID}`;
 
+  function showClaimToast(msg, color) {
+    let t = document.getElementById('claim-layout-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'claim-layout-toast';
+      t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);' +
+        'background:#333;color:white;padding:10px 20px;border-radius:6px;' +
+        'font-size:14px;z-index:99999;opacity:0;transition:opacity 0.25s;' +
+        'pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.background = color || '#4a6b3a';
+    t.style.opacity = '1';
+    clearTimeout(t._h);
+    t._h = setTimeout(() => { t.style.opacity = '0'; }, 1200);
+  }
+
   function savePositions() {
     if (!activeCy) return;
     try {
@@ -429,8 +487,17 @@
         const p = n.position();
         positions[n.id()] = { x: p.x, y: p.y };
       });
-      localStorage.setItem(CLAIM_LAYOUT_KEY, JSON.stringify(positions));
-    } catch (e) {}
+      const json = JSON.stringify(positions);
+      localStorage.setItem(CLAIM_LAYOUT_KEY, json);
+      const readBack = localStorage.getItem(CLAIM_LAYOUT_KEY);
+      if (readBack !== json) {
+        showClaimToast('שמירה נכשלה (כתיבה לא אושרה)', '#9a3a3a');
+      } else {
+        showClaimToast(`נשמר: ${activeCy.nodes().length} צמתים`, '#4a6b3a');
+      }
+    } catch (e) {
+      showClaimToast('שמירה נכשלה: ' + e.message, '#9a3a3a');
+    }
   }
 
   function applySavedPositions() {
@@ -441,12 +508,15 @@
       if (raw) saved = JSON.parse(raw);
     } catch (e) { return; }
     if (!saved) return;
+    let n = 0;
     activeCy.nodes().forEach(node => {
       const p = saved[node.id()];
       if (p && typeof p.x === 'number' && typeof p.y === 'number') {
         node.position({ x: p.x, y: p.y });
+        n++;
       }
     });
+    if (n > 0) showClaimToast(`הוחל סידור שמור על ${n} צמתים`, '#3a5b75');
   }
 
   const claimResetLayoutBtn = document.getElementById('claim-reset-layout-btn');
