@@ -1,0 +1,6 @@
+id: math_discrete
+name: מתמטיקה בדידה
+prerequisites:
+- math_foundations
+- math_elementary
+schema_version: 1
