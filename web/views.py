@@ -183,7 +183,11 @@ def claim_view(claim_id: str, request: Request,
     # (not always a subset of declared deps) so linkify_refs can swap them
     # into clickable inline-expand buttons.
     import re as _re
-    _ID_IN_TEXT = _re.compile(r"\b((?:def_|thm_|ax_|lem_|prf_|axc_)[a-z0-9_]+)\b")
+    # Broad claim-id shape: any short lowercase prefix + underscore + tail.
+    # False positives get filtered by name_map lookup downstream, so being
+    # permissive is safe and future-proofs against new id families
+    # (pl_*, fol_*, etc.) without needing to enumerate.
+    _ID_IN_TEXT = _re.compile(r"\b([a-z][a-z0-9]{0,10}_[a-z0-9_]+)\b")
 
     referenced_ids = set(_collect_tree_ids(trace_ancestors))
     referenced_ids.update(_collect_tree_ids(trace_descendants))

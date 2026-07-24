@@ -160,7 +160,8 @@ def get_inline_proof(claim_id: str,
     # Gather referenced IDs from both statement and proof body (cheap regex)
     import re as _re
     text_blob = (claim.statement or "") + "\n" + (proof.body if proof else "")
-    ref_ids = set(_re.findall(r"\b((?:def_|thm_|ax_|lem_|prf_|axc_)[a-z0-9_]+)\b", text_blob))
+    # Match any snake_case id shape; downstream name_map filters non-claims.
+    ref_ids = set(_re.findall(r"\b([a-z][a-z0-9]{0,10}_[a-z0-9_]+)\b", text_blob))
     if proof:
         ref_ids.update(proof.dependencies)
 
